@@ -1,0 +1,21 @@
+workspace.mel
+/assets
+/autosave
+/cache
+/clips
+/data
+/images
+/movies
+/renderData
+/sceneAssembly
+/scenes
+/sound
+/sourceimages
+/Time Editor
+/scripts/__pycache__
+/scripts/test.py
+/scripts/userSetup.mel
+/scripts/utils.py
+/scripts/UI.py
+
+
