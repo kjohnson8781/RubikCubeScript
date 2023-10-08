@@ -1,5 +1,7 @@
-# Modeling Script for blank Rubiks Cube
 
+from PySide2 import QtWidgets, QtCore, QtGui
+from shiboken2 import wrapInstance
+import maya.OpenMayaUI as omui
 import maya.cmds as cmds
 import fnmatch
 
@@ -85,6 +87,7 @@ def CubeTexture():
 
 # Create Cube Function
 def createCubeModel():
+    clearCubeModel()
     cube = cmds.polyCube( w=width, h=width, d=width, name="rubikCube" )
     cmds.polyBevel3(cube, f=0.2, oaf=True, autoFit=True, sg=10, ws=True, sa=30, subdivideNgons=True, mv=True, mvt=0.0001, ma=180, at=180)
     SetInitialPosition()
@@ -119,8 +122,112 @@ def clearCubeModel():
     if len(cubeList) > 0:
         cmds.delete(cubeList)
 
-clearCubeModel()
-createCubeModel()
+def maya_main_window():
+    mayaMainWindowPtr = omui.MQtUtil.mainWindow() 
+    return wrapInstance(int(mayaMainWindowPtr), QtWidgets.QWidget) 
+
+class RubikCubeUI(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super(RubikCubeUI, self).__init__(parent=maya_main_window())
+        self.setWindowFlags(QtCore.Qt.Window)
+        self.setObjectName('RubikCubeUI')
+        self.setWindowTitle('Rubik Cube UI')
+        self.defaultUI()
+
+    def defaultUI(self):
+        outerLayout = QtWidgets.QVBoxLayout()
+        
+        groupboxFunc = QtWidgets.QGroupBox("Main Functions")
+        mainFunctionsLayout = QtWidgets.QHBoxLayout()
+
+        button_create = QtWidgets.QPushButton('Create', self)
+        button_create.clicked.connect(createCubeModel)
+        button_reset = QtWidgets.QPushButton('Reset', self)
+        button_reset.clicked.connect(createCubeModel)
+        button_random = QtWidgets.QPushButton('Randomize', self)
+        # button_random.clicked.connect()
+        button_solve = QtWidgets.QPushButton('Solve!', self)
+        # button_solve.clicked.connect()
+
+        mainFunctionsLayout.addWidget(button_create)
+        mainFunctionsLayout.addWidget(button_reset)
+        mainFunctionsLayout.addWidget(button_random)
+        mainFunctionsLayout.addWidget(button_solve)
+
+        groupboxFunc.setLayout(mainFunctionsLayout)
+        
+        groupboxManual = QtWidgets.QGroupBox("Manual Rotation")
+        manualLayout = QtWidgets.QVBoxLayout()
+
+        selectionLayout = QtWidgets.QHBoxLayout()
+        self.combo = QtWidgets.QComboBox(self)
+        self.combo.addItem( 'Front' )
+        self.combo.addItem( 'Back' )
+        self.combo.addItem( 'Right' )
+        self.combo.addItem( 'Left' )
+        self.combo.addItem( 'Top' )
+        self.combo.addItem( 'Bottom' )
+        self.combo.setCurrentIndex(0)
+        self.combo.move(20, 20)
+        self.combo.activated[str].connect(self.combo_onActivated)
+        selectionLayout.addWidget(self.combo)
+
+        radioLayout = QtWidgets.QHBoxLayout()
+        radio_face = QtWidgets.QRadioButton('Face', self)
+        radio_midv = QtWidgets.QRadioButton('Vertical Middle', self)
+        radio_midh = QtWidgets.QRadioButton('Horizontal Middle', self)
+        radio_double = QtWidgets.QRadioButton('Double', self)
+        radio_face.setChecked(True)
+        radioLayout.addWidget(radio_face)
+        radioLayout.addWidget(radio_midv)
+        radioLayout.addWidget(radio_midh)
+        radioLayout.addWidget(radio_double)
+
+        rotateLayout = QtWidgets.QHBoxLayout()
+        button_CW = QtWidgets.QPushButton('Clockwise', self)
+        button_CCW = QtWidgets.QPushButton('Counter Clockwise', self)
+        # self.button.move(20, 50)
+        button_CW.clicked.connect(self.CW)
+        button_CCW.clicked.connect(self.CCW)
+        rotateLayout.addWidget(button_CW)
+        rotateLayout.addWidget(button_CCW)
+
+        manualLayout.addLayout(selectionLayout)
+        manualLayout.addLayout(radioLayout)
+        manualLayout.addLayout(rotateLayout)
+        groupboxManual.setLayout(manualLayout)
+
+
+        outerLayout.addWidget(groupboxFunc)
+        outerLayout.addWidget(groupboxManual)
+        outerLayout.addLayout(mainFunctionsLayout)
+        outerLayout.addLayout(selectionLayout)
+        outerLayout.addLayout(radioLayout)
+        outerLayout.addLayout(rotateLayout)
+
+
+        self.setLayout(outerLayout)
+    
+    def combo_onActivated(self, text):
+        self.cmd = 'poly' + text + '()'
+        
+    def CW(self):
+        print('clockwise')
+
+    def CCW(self):
+        print('counter')
+
+def checkIfWindowExists():
+    if QtWidgets.QApplication.instance():
+        for window in (QtWidgets.QApplication.allWindows()):
+            if 'RubikCubeUI' in window.objectName():
+                window.destroy()
+
+
+if __name__ == "__main__":
+    checkIfWindowExists()
+    ui = RubikCubeUI()
+    ui.show()
 
 
 
