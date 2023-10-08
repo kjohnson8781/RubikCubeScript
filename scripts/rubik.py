@@ -132,7 +132,9 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.setWindowFlags(QtCore.Qt.Window)
         self.setObjectName('RubikCubeUI')
         self.setWindowTitle('Rubik Cube UI')
+        # self.setGeometry(QtCore.QRect(10, 10, 500, 500))
         self.defaultUI()
+        self.defaultSelection()
 
     def defaultUI(self):
         outerLayout = QtWidgets.QVBoxLayout()
@@ -170,23 +172,34 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.combo.setCurrentIndex(0)
         self.combo.move(20, 20)
         self.combo.activated[str].connect(self.combo_onActivated)
+        self.combo.currentTextChanged[str].connect(self.selection)
+
         selectionLayout.addWidget(self.combo)
 
         radioLayout = QtWidgets.QHBoxLayout()
-        radio_face = QtWidgets.QRadioButton('Face', self)
-        radio_midv = QtWidgets.QRadioButton('Vertical Middle', self)
-        radio_midh = QtWidgets.QRadioButton('Horizontal Middle', self)
-        radio_double = QtWidgets.QRadioButton('Double', self)
-        radio_face.setChecked(True)
-        radioLayout.addWidget(radio_face)
-        radioLayout.addWidget(radio_midv)
-        radioLayout.addWidget(radio_midh)
-        radioLayout.addWidget(radio_double)
+        self.radio_face = QtWidgets.QRadioButton('Face', self)
+        self.radio_midv = QtWidgets.QRadioButton('Vertical Middle', self)
+        self.radio_midh = QtWidgets.QRadioButton('Horizontal Middle', self)
+        self.radio_double = QtWidgets.QRadioButton('Double', self)
+       
+        self.radio_face.setChecked(True)
+        self.radio_face.clicked.connect(self.radio_Checked)
+        self.radio_midv.clicked.connect(self.radio_Checked)
+        self.radio_midh.clicked.connect(self.radio_Checked)
+        self.radio_double.clicked.connect(self.radio_Checked)
+        self.radio_face.clicked.connect(self.selection)
+        self.radio_midv.clicked.connect(self.selection)
+        self.radio_midh.clicked.connect(self.selection)
+        self.radio_double.clicked.connect(self.selection)
+
+        radioLayout.addWidget(self.radio_face)
+        radioLayout.addWidget(self.radio_midv)
+        radioLayout.addWidget(self.radio_midh)
+        radioLayout.addWidget(self.radio_double)
 
         rotateLayout = QtWidgets.QHBoxLayout()
         button_CW = QtWidgets.QPushButton('Clockwise', self)
         button_CCW = QtWidgets.QPushButton('Counter Clockwise', self)
-        # self.button.move(20, 50)
         button_CW.clicked.connect(self.CW)
         button_CCW.clicked.connect(self.CCW)
         rotateLayout.addWidget(button_CW)
@@ -208,12 +221,44 @@ class RubikCubeUI(QtWidgets.QDialog):
 
         self.setLayout(outerLayout)
     
-    def combo_onActivated(self, text):
-        self.cmd = 'poly' + text + '()'
-        
-    def CW(self):
-        print('clockwise')
+    def defaultSelection(self):
+        cubeList = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
+        for cube in cubeList:
+            z = cmds.getAttr(cube+ '.translateZ')
+            if z == transform:
+                cmds.select(cube, add=True)
 
+    def combo_onActivated(self):
+        return self.combo.currentText()
+    
+    def radio_Checked(self):
+        radioList = [self.radio_face, self.radio_midh, self.radio_midv, self.radio_double]
+        for btn in radioList:
+            if btn.isChecked():
+                return btn.text()
+
+    def selection(self):
+        comboResult = self.combo_onActivated()
+        radioResult = self.radio_Checked()
+        if comboResult == 'Back' and radioResult == 'Face':
+            cmds.select(cl=True)
+            cubeList = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
+            for cube in cubeList:
+                print(cube)
+                z = cmds.getAttr(cube+ '.translateZ')
+                if z == transform * -1:
+                    cmds.select(cube, add=True)
+
+    def CW(self):
+        comboResult = self.combo_onActivated()
+        radioResult = self.radio_Checked()
+        if comboResult == 'Front' and radioResult == 'Face':
+            cubeList = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
+            for cube in cubeList:
+                z = cmds.getAttr(cube+ '.translateZ')
+                if z == transform:
+                    cmds.select(cube, add=True)
+    
     def CCW(self):
         print('counter')
 
@@ -228,7 +273,6 @@ if __name__ == "__main__":
     checkIfWindowExists()
     ui = RubikCubeUI()
     ui.show()
-
 
 
     

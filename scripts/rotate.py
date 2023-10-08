@@ -121,7 +121,7 @@ def Back(CW=True):
     cubeList = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
     for cube in cubeList:
         z = cmds.getAttr(cube+ '.translateZ')
-        if z == transform + width:
+        if z == transform * -1:
             cmds.select(cube, add=True)
     selectedList = cmds.ls(sl=True)
     center = cmds.ls("center*", sl=True)
@@ -172,7 +172,6 @@ def MidHori(CW=True):
     center = cmds.ls("core", sl=True)
     RotateYFace(selectedList, center, direction)
 
-Right(0)
-
+Back(0)
 
 
