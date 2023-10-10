@@ -85,6 +85,22 @@ def CubeTexture():
     cmds.select("*white*" + ".f[121]")
     cmds.hyperShade(a=whiteBlinn)
 
+def SetInitKey():
+    cmds.select("core", "center*", "side_*", 'corner*')
+    cmds.setKeyframe(attribute='rotateX', t=1)
+    cmds.setKeyframe(attribute='rotateY', t=1)
+    cmds.setKeyframe(attribute='rotateZ', t=1)
+    cmds.select(clear=True)
+
+def animate():
+    cmds.currentTime(frame)
+    cmds.select("core", "center*", "side_*", 'corner*')
+    cmds.setKeyframe(attribute='rotateX', t=frame)
+    cmds.setKeyframe(attribute='rotateY', t=frame)
+    cmds.setKeyframe(attribute='rotateZ', t=frame)
+    cmds.select(clear=True)
+    frame = frame + 10
+
 # Create Cube Function
 def createCubeModel():
     clearCubeModel()
@@ -113,6 +129,8 @@ def createCubeModel():
     RenameCubesColorDefinition()
     CubeTexture()
     SetInitialPivot()
+    SetInitKey()
+    cmds.rotationInterpolation("core", "center*", "side_*", 'corner*', c='quaternionSlerp')
 
     cmds.select(cl=True)
 
@@ -258,6 +276,16 @@ class RubikCubeUI(QtWidgets.QDialog):
                 z = cmds.getAttr(cube+ '.translateZ')
                 if z == transform:
                     cmds.select(cube, add=True)
+            selectedList = cmds.ls(sl=True)
+            center = cmds.ls("center*", sl=True)
+            cmds.select(center, d=True) 
+            cmds.select(center, add=True) 
+            cmds.parent()
+            cmds.select(center, r=True)
+            cmds.rotate(0, 0, -1*90, r=True)
+            cmds.select(selectedList)
+            cmds.parent(w=True)
+            cmds.select(cl=True)
     
     def CCW(self):
         print('counter')
