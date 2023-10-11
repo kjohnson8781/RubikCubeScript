@@ -1,5 +1,4 @@
 import maya.cmds as cmds
-import time
 import random
 
 dist = 0.1
@@ -9,7 +8,7 @@ transform = width + dist
 center = ''
 frame = 10
 
-def checkFloatError():
+def check_float_err():
     cubeList = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
     for cube in cubeList:
         x = cmds.getAttr(cube+ '.translateX')
@@ -22,7 +21,7 @@ def checkFloatError():
         cmds.setAttr(cube+ '.translateY', roundY)
         cmds.setAttr(cube+ '.translateZ', roundZ)
 
-def Right(CW=True):
+def right(CW=True):
     if CW == True:
         direction = -1
     else:
@@ -42,10 +41,10 @@ def Right(CW=True):
     cmds.rotate(direction*90, 0, 0, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
 
-def Left(CW=True):
+def left(CW=True):
     if CW == True:
         direction = 1
     else:
@@ -65,10 +64,10 @@ def Left(CW=True):
     cmds.rotate(direction*90, 0, 0, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
 
-def Top(CW=True):
+def top(CW=True):
     if CW == True:
         direction = -1
     else:
@@ -88,10 +87,10 @@ def Top(CW=True):
     cmds.rotate(0, direction*90, 0, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
 
-def Bottom(CW=True):
+def bottom(CW=True):
     if CW == True:
         direction = 1
     else:
@@ -111,10 +110,10 @@ def Bottom(CW=True):
     cmds.rotate(0, direction*90, 0, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
 
-def Front(CW=True):
+def front(CW=True):
     if CW == True:
         direction = -1
     else:
@@ -134,10 +133,10 @@ def Front(CW=True):
     cmds.rotate(0, 0, direction*90, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
 
-def Back(CW=True):
+def back(CW=True):
     if CW == True:
         direction = 1
     else:
@@ -157,10 +156,10 @@ def Back(CW=True):
     cmds.rotate(0, 0, direction*90, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
 
-def MidVertFB(CW=True):
+def mid_vert_fb(CW=True):
     if CW == True:
         direction = 1
     else:
@@ -180,10 +179,10 @@ def MidVertFB(CW=True):
     cmds.rotate(direction*90, 0, 0, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
 
-def MidVertLR(CW=True):
+def mid_vert_LR(CW=True):
     if CW == True:
         direction = 1
     else:
@@ -203,10 +202,10 @@ def MidVertLR(CW=True):
     cmds.rotate(0, 0, direction*90, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
 
-def MidHori(CW=True):
+def mid_hori(CW=True):
     if CW == True:
         direction = -1
     else:
@@ -226,15 +225,8 @@ def MidHori(CW=True):
     cmds.rotate(0, direction*90, 0, r=True)
     cmds.select(selectedList)
     cmds.parent(w=True)
-    checkFloatError()
+    check_float_err()
     cmds.select(cl=True)
-
-def SetInitKey():
-    cmds.select("core", "center*", "side_*", 'corner*')
-    cmds.setKeyframe(attribute='rotateX', t=1)
-    cmds.setKeyframe(attribute='rotateY', t=1)
-    cmds.setKeyframe(attribute='rotateZ', t=1)
-    cmds.select(clear=True)
 
 def animate():
     global frame
@@ -245,26 +237,26 @@ def animate():
     cmds.select(cl=True)
     frame = frame + 10
 
-def randomRot():
+def rand_rot():
     cmds.select("core", "center*", "side_*", 'corner*')
     cmds.cutKey(time=(2,None))
     cmds.select(cl=True)
     for i in range(0,10):
         print(i)
-        randFace = random.randint(0,8)
-        randNum = random.randint(0, 1)
-        turnList = [Front, Back, Left, Right, Top, Bottom, MidVertLR, MidVertFB, MidHori]
-        turnList[randFace](randNum)
+        rand_face = random.randint(0,8)
+        rand_num = random.randint(0, 1)
+        turnList = [front, back, left, right, top, bottom, mid_vert_LR, mid_vert_fb, mid_hori]
+        turnList[rand_face](rand_num)
         animate()
 
 def solve():
     cmds.select("core", "center*", "side_*", 'corner*')
-    lastFrame = cmds.findKeyframe(which='last')
-    cmds.scaleKey(time=(None,None), nst=lastFrame, net=1)
-    cmds.currentTime(lastFrame)
+    last_frame = cmds.findKeyframe(which='last')
+    cmds.scaleKey(time=(None,None), nst=last_frame, net=1)
+    cmds.currentTime(last_frame)
     cmds.select(cl=True)
 
-# randomRot()
+rand_rot()
 
 
 # solve()
