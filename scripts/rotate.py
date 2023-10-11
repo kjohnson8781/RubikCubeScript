@@ -245,8 +245,8 @@ def rand_rot():
         print(i)
         rand_face = random.randint(0,8)
         rand_num = random.randint(0, 1)
-        turnList = [front, back, left, right, top, bottom, mid_vert_LR, mid_vert_fb, mid_hori]
-        turnList[rand_face](rand_num)
+        turn_list = [front, back, left, right, top, bottom, mid_vert_LR, mid_vert_fb, mid_hori]
+        turn_list[rand_face](rand_num)
         animate()
 
 def solve():

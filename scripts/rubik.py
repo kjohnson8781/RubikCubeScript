@@ -139,15 +139,15 @@ def create_cube():
     cmds.select(cl=True)
 
 def clear_cube():
-    cubeList = cmds.ls("core", "center*", "side_*", 'corner*')
+    cube_list = cmds.ls("core", "center*", "side_*", 'corner*')
 
-    if len(cubeList) > 0:
+    if len(cube_list) > 0:
         cmds.delete("RubikCubeGrp")
-        # cmds.delete(cubeList)
+        # cmds.delete(cube_list)
 
 def maya_main_window():
-    mayaMainWindowPtr = omui.MQtUtil.mainWindow() 
-    return wrapInstance(int(mayaMainWindowPtr), QtWidgets.QWidget) 
+    maya_main_window_int = omui.MQtUtil.mainWindow() 
+    return wrapInstance(int(maya_main_window_int), QtWidgets.QWidget) 
 
 class RubikCubeUI(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -157,13 +157,13 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.setWindowTitle('Rubik Cube UI')
         # self.setGeometry(QtCore.QRect(10, 10, 500, 500))
         self.default_ui()
-        self.defaultSelection()
+        self.default_sel()
 
     def default_ui(self):
-        outerLayout = QtWidgets.QVBoxLayout()
+        outer_layout = QtWidgets.QVBoxLayout()
         
-        groupboxFunc = QtWidgets.QGroupBox("Main Functions")
-        mainFunctionsLayout = QtWidgets.QHBoxLayout()
+        func_groupbox = QtWidgets.QGroupBox("Main Functions")
+        func_layout = QtWidgets.QHBoxLayout()
 
         button_create = QtWidgets.QPushButton('Create', self)
         button_create.clicked.connect(create_cube)
@@ -174,17 +174,17 @@ class RubikCubeUI(QtWidgets.QDialog):
         button_solve = QtWidgets.QPushButton('Solve!', self)
         # button_solve.clicked.connect()
 
-        mainFunctionsLayout.addWidget(button_create)
-        mainFunctionsLayout.addWidget(button_reset)
-        mainFunctionsLayout.addWidget(button_random)
-        mainFunctionsLayout.addWidget(button_solve)
+        func_layout.addWidget(button_create)
+        func_layout.addWidget(button_reset)
+        func_layout.addWidget(button_random)
+        func_layout.addWidget(button_solve)
 
-        groupboxFunc.setLayout(mainFunctionsLayout)
+        func_groupbox.setLayout(func_layout)
         
-        groupboxManual = QtWidgets.QGroupBox("Manual Rotation")
-        manualLayout = QtWidgets.QVBoxLayout()
+        manual_groupbox = QtWidgets.QGroupBox("Manual Rotation")
+        manual_layout = QtWidgets.QVBoxLayout()
 
-        selectionLayout = QtWidgets.QHBoxLayout()
+        sel_layout = QtWidgets.QHBoxLayout()
         self.combo = QtWidgets.QComboBox(self)
         self.combo.addItem( 'Front' )
         self.combo.addItem( 'Back' )
@@ -197,102 +197,102 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.combo.activated[str].connect(self.combo_onActivated)
         self.combo.currentTextChanged[str].connect(self.selection)
 
-        selectionLayout.addWidget(self.combo)
+        sel_layout.addWidget(self.combo)
 
-        radioLayout = QtWidgets.QHBoxLayout()
+        radio_layout = QtWidgets.QHBoxLayout()
         self.radio_face = QtWidgets.QRadioButton('Face', self)
         self.radio_midv = QtWidgets.QRadioButton('Vertical Middle', self)
         self.radio_midh = QtWidgets.QRadioButton('Horizontal Middle', self)
         self.radio_double = QtWidgets.QRadioButton('Double', self)
        
         self.radio_face.setChecked(True)
-        self.radio_face.clicked.connect(self.radio_Checked)
-        self.radio_midv.clicked.connect(self.radio_Checked)
-        self.radio_midh.clicked.connect(self.radio_Checked)
-        self.radio_double.clicked.connect(self.radio_Checked)
+        self.radio_face.clicked.connect(self.radio_checked)
+        self.radio_midv.clicked.connect(self.radio_checked)
+        self.radio_midh.clicked.connect(self.radio_checked)
+        self.radio_double.clicked.connect(self.radio_checked)
         self.radio_face.clicked.connect(self.selection)
         self.radio_midv.clicked.connect(self.selection)
         self.radio_midh.clicked.connect(self.selection)
         self.radio_double.clicked.connect(self.selection)
 
-        radioLayout.addWidget(self.radio_face)
-        radioLayout.addWidget(self.radio_midv)
-        radioLayout.addWidget(self.radio_midh)
-        radioLayout.addWidget(self.radio_double)
+        radio_layout.addWidget(self.radio_face)
+        radio_layout.addWidget(self.radio_midv)
+        radio_layout.addWidget(self.radio_midh)
+        radio_layout.addWidget(self.radio_double)
 
-        rotateLayout = QtWidgets.QHBoxLayout()
-        button_CW = QtWidgets.QPushButton('Clockwise', self)
-        button_CCW = QtWidgets.QPushButton('Counter Clockwise', self)
-        button_CW.clicked.connect(self.CW)
-        button_CCW.clicked.connect(self.CCW)
-        rotateLayout.addWidget(button_CW)
-        rotateLayout.addWidget(button_CCW)
+        rotate_layout = QtWidgets.QHBoxLayout()
+        button_cw = QtWidgets.QPushButton('Clockwise', self)
+        button_ccw = QtWidgets.QPushButton('Counter Clockwise', self)
+        button_cw.clicked.connect(self.cw)
+        button_ccw.clicked.connect(self.ccw)
+        rotate_layout.addWidget(button_cw)
+        rotate_layout.addWidget(button_ccw)
 
-        manualLayout.addLayout(selectionLayout)
-        manualLayout.addLayout(radioLayout)
-        manualLayout.addLayout(rotateLayout)
-        groupboxManual.setLayout(manualLayout)
-
-
-        outerLayout.addWidget(groupboxFunc)
-        outerLayout.addWidget(groupboxManual)
-        outerLayout.addLayout(mainFunctionsLayout)
-        outerLayout.addLayout(selectionLayout)
-        outerLayout.addLayout(radioLayout)
-        outerLayout.addLayout(rotateLayout)
+        manual_layout.addLayout(sel_layout)
+        manual_layout.addLayout(radio_layout)
+        manual_layout.addLayout(rotate_layout)
+        manual_groupbox.setLayout(manual_layout)
 
 
-        self.setLayout(outerLayout)
+        outer_layout.addWidget(func_groupbox)
+        outer_layout.addWidget(manual_groupbox)
+        outer_layout.addLayout(func_layout)
+        outer_layout.addLayout(sel_layout)
+        outer_layout.addLayout(radio_layout)
+        outer_layout.addLayout(rotate_layout)
+
+
+        self.setLayout(outer_layout)
     
-    def defaultSelection(self):
-        cubeList = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
-        for cube in cubeList:
-            z = cmds.getAttr(cube+ '.translateZ')
+    def default_sel(self):
+        cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
+        for cube in cube_list:
+            z = cmds.getAttr(cube + '.translateZ')
             if z == transform:
                 cmds.select(cube, add=True)
 
     def combo_onActivated(self):
         return self.combo.currentText()
     
-    def radio_Checked(self):
+    def radio_checked(self):
         radioList = [self.radio_face, self.radio_midh, self.radio_midv, self.radio_double]
         for btn in radioList:
             if btn.isChecked():
                 return btn.text()
 
     def selection(self):
-        comboResult = self.combo_onActivated()
-        radioResult = self.radio_Checked()
-        if comboResult == 'Back' and radioResult == 'Face':
+        combo_result = self.combo_onActivated()
+        radio_result = self.radio_checked()
+        if combo_result == 'Back' and radio_result == 'Face':
             cmds.select(cl=True)
-            cubeList = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
-            for cube in cubeList:
+            cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
+            for cube in cube_list:
                 print(cube)
                 z = cmds.getAttr(cube+ '.translateZ')
                 if z == transform * -1:
                     cmds.select(cube, add=True)
 
-    def CW(self):
-        comboResult = self.combo_onActivated()
-        radioResult = self.radio_Checked()
-        if comboResult == 'Front' and radioResult == 'Face':
-            cubeList = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
-            for cube in cubeList:
-                z = cmds.getAttr(cube+ '.translateZ')
+    def cw(self):
+        combo_result = self.combo_onActivated()
+        radio_result = self.radio_checked()
+        if combo_result == 'Front' and radio_result == 'Face':
+            cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
+            for cube in cube_list:
+                z = cmds.getAttr(cube + '.translateZ')
                 if z == transform:
                     cmds.select(cube, add=True)
-            selectedList = cmds.ls(sl=True)
+            sel_list = cmds.ls(sl=True)
             center = cmds.ls("center*", sl=True)
             cmds.select(center, d=True) 
             cmds.select(center, add=True) 
             cmds.parent()
             cmds.select(center, r=True)
             cmds.rotate(0, 0, -1*90, r=True)
-            cmds.select(selectedList)
+            cmds.select(sel_list)
             cmds.parent(w=True)
             cmds.select(cl=True)
     
-    def CCW(self):
+    def ccw(self):
         print('counter')
 
 def check_window_exists():
