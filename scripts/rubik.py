@@ -44,46 +44,50 @@ def CubeTexture():
     shaderGroupFilter = fnmatch.filter(shaderGroupList, 'rubik*')
     materialsFilter = fnmatch.filter(materialsList, 'rubik*')
 
-    if len(shaderGroupFilter) > 0:
-        cmds.delete(shaderGroupList)
-    if len(materialsFilter) > 0:
-        cmds.delete(materialsList)
+    # Create shaders if not exist
+    if len(shaderGroupFilter) == 0 and len(materialsFilter) == 0:
+        cubeBaseBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikBlack")
+        cmds.setAttr('rubikBlack.color', 0, 0, 0, type="double3")
 
-    # Create shaders and apply colors
-    cubeBaseBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikBlack")
-    cmds.setAttr('rubikBlack.color', 0, 0, 0, type="double3")
+        blueBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikBlue")
+        cmds.setAttr('rubikBlue.color', 0, 0, 1, type="double3")
+
+        greenBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikGreen")
+        cmds.setAttr('rubikGreen.color', 0, 1, 0, type="double3")
+        
+        orangeBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikOrange")
+        cmds.setAttr('rubikOrange.color', 1, 0.2683, 0.0392, type="double3")
+        
+        redBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikRed")
+        cmds.setAttr('rubikRed.color', 1, 0, 0, type="double3")
+
+        yellowBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikYellow")
+        cmds.setAttr('rubikYellow.color', 1, 1, 0, type="double3")
+            
+        whiteBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikWhite")
+        cmds.setAttr('rubikWhite.color', 1, 1, 1, type="double3")
+
+    # Apply colors
     cmds.select("core", "corner*", "side_*", "center*")
-    cmds.hyperShade(a=cubeBaseBlinn)
+    cmds.hyperShade(a='rubikBlack')
 
-    blueBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikBlue")
-    cmds.setAttr('rubikBlue.color', 0, 0, 1, type="double3")
     cmds.select("*blue*" + ".f[122]")
-    cmds.hyperShade(a=blueBlinn)
+    cmds.hyperShade(a='rubikBlue')
 
-    greenBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikGreen")
-    cmds.setAttr('rubikGreen.color', 0, 1, 0, type="double3")
     cmds.select("*green*" + ".f[120]")
-    cmds.hyperShade(a=greenBlinn)
+    cmds.hyperShade(a='rubikGreen')
    
-    orangeBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikOrange")
-    cmds.setAttr('rubikOrange.color', 1, 0.2683, 0.0392, type="double3")
     cmds.select("*orange*" + ".f[125]")
-    cmds.hyperShade(a=orangeBlinn)
+    cmds.hyperShade(a='rubikOrange')
 
-    redBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikRed")
-    cmds.setAttr('rubikRed.color', 1, 0, 0, type="double3")
     cmds.select("*red*" + ".f[124]")
-    cmds.hyperShade(a=redBlinn)
+    cmds.hyperShade(a='rubikRed')
 
-    yellowBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikYellow")
-    cmds.setAttr('rubikYellow.color', 1, 1, 0, type="double3")
     cmds.select("*yellow*" + ".f[123]")
-    cmds.hyperShade(a=yellowBlinn)
+    cmds.hyperShade(a='rubikYellow')
 
-    whiteBlinn = cmds.shadingNode('blinn', asShader=True, name="rubikWhite")
-    cmds.setAttr('rubikWhite.color', 1, 1, 1, type="double3")
     cmds.select("*white*" + ".f[121]")
-    cmds.hyperShade(a=whiteBlinn)
+    cmds.hyperShade(a='rubikWhite')
 
 def SetInitKey():
     cmds.select("core", "center*", "side_*", 'corner*')

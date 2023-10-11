@@ -257,10 +257,15 @@ def randomRot():
         turnList[randFace](randNum)
         animate()
 
-randomRot()
+def solve():
+    cmds.select("core", "center*", "side_*", 'corner*')
+    lastFrame = cmds.findKeyframe(which='last')
+    cmds.scaleKey(time=(None,None), nst=lastFrame, net=1)
+    cmds.currentTime(lastFrame)
+    cmds.select(cl=True)
+
+# randomRot()
 
 
-
-
-
+# solve()
 
