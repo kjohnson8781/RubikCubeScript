@@ -27,7 +27,10 @@ class Cube():
         # create 3x3 array of instanced cubes
         def create_pos_instance(x, y, z):
             result = cmds.instance(transform_name, name="instance#")
-            cmds.move(i * x + self.init_pos_list[0], j*y + self.init_pos_list[1], k*z + self.init_pos_list[2], result)
+            cmds.move(i * x + self.init_pos_list[0], 
+                      j * y + self.init_pos_list[1],
+                      k * z + self.init_pos_list[2],
+                      result)
         
         for i in range(0, 3):
             if i != 0:
@@ -45,7 +48,8 @@ class Cube():
         Cube.rename_by_color()
         Cube.set_init_piv()
         Cube.texture()
-        cmds.rotationInterpolation("core", "center*", "side_*", 'corner*', c='quaternionSlerp')
+        cmds.rotationInterpolation("core", "center*", "side_*", 'corner*',
+                                   c='quaternionSlerp')
         cmds.group("core", "center*", "side_*", 'corner*', name="RubikCubeGrp")
         cmds.select(cl=True) # deselect all cubes for user
 
@@ -53,6 +57,10 @@ class Cube():
         cube_list = cmds.ls("core", "center*", "side_*", 'corner*')
         if len(cube_list) > 0:
             cmds.delete("RubikCubeGrp")
+
+    def get_cube_list():
+        cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
+        return cube_list
 
     # set inital cube to (0,0) based on width and distance between cubes
     def set_init_pos(self):
@@ -146,3 +154,51 @@ class Cube():
 
         cmds.select("*white*" + ".f[121]")
         cmds.hyperShade(a='rubikWhite')
+
+class CubeSection():
+    def check_float_err():
+        cube_list = Cube.get_cube_list()
+        for cube in cube_list:
+            x = cmds.getAttr(cube + '.translateX')
+            y = cmds.getAttr(cube + '.translateY')
+            z = cmds.getAttr(cube + '.translateZ')
+            roundX = round(x, 2)
+            roundY = round(y, 2)
+            roundZ = round(z, 2)
+            cmds.setAttr(cube + '.translateX', roundX)
+            cmds.setAttr(cube + '.translateY', roundY)
+            cmds.setAttr(cube + '.translateZ', roundZ)
+    
+    # define when clockwise multiplier is positive
+    def dir_pos(cw=True):
+        if cw == True:
+            direction = 1
+        else:
+            direction = -1
+
+        return direction
+    
+    # define when clockwise multiplier is negative
+    def dir_pos(cw=True):
+        if cw == True:
+            direction = -1
+        else:
+            direction = 1
+
+        return direction
+
+    def rotate(coord, center, dir, sl):
+        cmds.select(center, d=True) 
+        cmds.select(center, add=True) 
+        cmds.parent()
+        cmds.select(center, r=True)
+        if coord == 'x':
+            cmds.rotate(dir*90, 0, 0, r=True)
+        elif coord == 'y':
+            cmds.rotate(0, dir*90, 0, r=True)
+        elif coord == 'z':
+            cmds.rotate(0, 0, dir*90, r=True)
+        cmds.select(sl)
+        cmds.parent(w=True)
+        CubeSection.check_float_err()
+        cmds.select(cl=True)

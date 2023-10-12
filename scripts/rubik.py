@@ -147,6 +147,53 @@ class Cube():
         cmds.select("*white*" + ".f[121]")
         cmds.hyperShade(a='rubikWhite')
 
+class CubeSection():
+    def check_float_err():
+        cube_list = Cube.get_cube_list()
+        for cube in cube_list:
+            x = cmds.getAttr(cube + '.translateX')
+            y = cmds.getAttr(cube + '.translateY')
+            z = cmds.getAttr(cube + '.translateZ')
+            roundX = round(x, 2)
+            roundY = round(y, 2)
+            roundZ = round(z, 2)
+            cmds.setAttr(cube + '.translateX', roundX)
+            cmds.setAttr(cube + '.translateY', roundY)
+            cmds.setAttr(cube + '.translateZ', roundZ)
+    
+    # define when clockwise multiplier is positive
+    def dir_pos(cw=True):
+        if cw == True:
+            direction = 1
+        else:
+            direction = -1
+
+        return direction
+    
+    # define when clockwise multiplier is negative
+    def dir_pos(cw=True):
+        if cw == True:
+            direction = -1
+        else:
+            direction = 1
+
+        return direction
+
+    def rotate(coord, center, dir, sl):
+        cmds.select(center, d=True) 
+        cmds.select(center, add=True) 
+        cmds.parent()
+        cmds.select(center, r=True)
+        if coord == 'x':
+            cmds.rotate(dir*90, 0, 0, r=True)
+        elif coord == 'y':
+            cmds.rotate(0, dir*90, 0, r=True)
+        elif coord == 'z':
+            cmds.rotate(0, 0, dir*90, r=True)
+        cmds.select(sl)
+        cmds.parent(w=True)
+        CubeSection.check_float_err()
+        cmds.select(cl=True)
 
 def set_init_key():
     cmds.select("core", "center*", "side_*", 'corner*')
@@ -174,7 +221,6 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.setWindowFlags(QtCore.Qt.Window)
         self.setObjectName('RubikCubeUI')
         self.setWindowTitle('Rubik Cube UI')
-        # self.setGeometry(QtCore.QRect(10, 10, 500, 500))
         self.default_ui()
         # self.default_sel()
 
