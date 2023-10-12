@@ -1,93 +1,152 @@
-from PySide2 import QtWidgets, QtCore
-from shiboken2 import wrapInstance
+from random import randint
+from fnmatch import filter
+
 import maya.OpenMayaUI as omui
 import maya.cmds as cmds
-import fnmatch
+from PySide2 import QtWidgets, QtCore
+from shiboken2 import wrapInstance
 
-dist = 0.1
-width = 1.0
+class Cube():
+    def __init__(self, dist = 0.1, width = 1.0):
+        self.dist = dist
+        self.width = width
+        self.transform = width + dist
+        self.init_pos_list = [-1*self.transform, width/2, -1*self.transform]
 
-transform = width + dist
-init_pos_list = [transform * -1, width/2, transform * -1]
-
-# Initial Position Function
-def set_init_pos():
-    cmds.setAttr('rubikCube.translateX', init_pos_list[0])
-    cmds.setAttr('rubikCube.translateY', init_pos_list[1])
-    cmds.setAttr('rubikCube.translateZ', init_pos_list[2])
-
-# Initial Pivot Function
-def set_init_piv():
-    ext_cube_list = cmds.ls("corner*", "side_*", "center*", tr=True)
-    for i in range(0, len(ext_cube_list)):
-        cmds.matchTransform(ext_cube_list[i], 'core', piv=True)
-
-# Rename cubes based on position to define color
-def rename_by_color():
-    color_name_list = [
-        "corner_blue_orange_yellow", "side_orange_yellow", "corner_green_orange_yellow", "side_blue_orange", "center_orange",
-        "side_green_orange", "corner_blue_orange_white", "side_orange_white", "corner_green_orange_white", "side_blue_yellow",
-        "center_yellow", "side_green_yellow", "center_blue", "core", "center_green", "side_blue_white", "center_white", 
-        "side_green_white", "corner_blue_red_yellow", "side_red_yellow", "corner_green_red_yellow", "side_blue_red",
-        "center_red", "side_green_red", "corner_blue_red_white", "side_red_white", "corner_green_red_white"]
-    cmds.rename("rubikCube", color_name_list[0])
-    for name in range(1, len(color_name_list)):
-        cmds.rename("instance" + str(name), color_name_list[name])
-
-# Texture Cube Function
-def texture_cube():
-
-    # Delete shaders if already exist 
-    shader_group_list = cmds.ls(type='shadingEngine')
-    mat_list = cmds.ls(mat=True)
-
-    shader_filter = fnmatch.filter(shader_group_list, 'rubik*')
-    mat_filter = fnmatch.filter(mat_list, 'rubik*')
-
-    # Create shaders if not exist
-    if len(shader_filter) == 0 and len(mat_filter) == 0:
-        cmds.shadingNode('blinn', asShader=True, name="rubikBlack")
-        cmds.setAttr('rubikBlack.color', 0, 0, 0, type="double3")
-
-        cmds.shadingNode('blinn', asShader=True, name="rubikBlue")
-        cmds.setAttr('rubikBlue.color', 0, 0, 1, type="double3")
-
-        cmds.shadingNode('blinn', asShader=True, name="rubikGreen")
-        cmds.setAttr('rubikGreen.color', 0, 1, 0, type="double3")
+    def create(self):
+        # create initial cube
+        cube = cmds.polyCube(w=self.width, h=self.width, d=self.width, 
+                             name="rubikCube")
+        cmds.polyBevel3(cube, f=0.2, oaf=True, autoFit=True, sg=10, ws=True,
+                         sa=30, subdivideNgons=True, mv=True, mvt=0.0001,
+                         ma=180, at=180)
+        transform_name = cube[0]
         
-        cmds.shadingNode('blinn', asShader=True, name="rubikOrange")
-        cmds.setAttr('rubikOrange.color', 1, 0.2683, 0.0392, type="double3")
-        
-        cmds.shadingNode('blinn', asShader=True, name="rubikRed")
-        cmds.setAttr('rubikRed.color', 1, 0, 0, type="double3")
+        self.set_init_pos()
 
-        cmds.shadingNode('blinn', asShader=True, name="rubikYellow")
-        cmds.setAttr('rubikYellow.color', 1, 1, 0, type="double3")
+        # create 3x3 array of instanced cubes
+        def create_pos_instance(x, y, z):
+            result = cmds.instance(transform_name, name="instance#")
+            cmds.move(i * x + self.init_pos_list[0], j*y + self.init_pos_list[1], k*z + self.init_pos_list[2], result)
+        
+        for i in range(0, 3):
+            if i != 0:
+                create_pos_instance(self.transform, 0, 0)
+
+            for j in range(0, 3):             
+                if j != 0:     
+                    create_pos_instance(self.transform, self.transform, 0)   
+                
+                for k in range(0, 3):
+                    if k != 0:
+                        create_pos_instance(self.transform, self.transform, self.transform)
+
+        # remaining initialization functions
+        Cube.rename_by_color()
+        Cube.set_init_piv()
+        Cube.texture()
+        cmds.rotationInterpolation("core", "center*", "side_*", 'corner*', c='quaternionSlerp')
+        cmds.group("core", "center*", "side_*", 'corner*', name="RubikCubeGrp")
+        cmds.select(cl=True) # deselect all cubes for user
+
+    def clear():
+        cube_list = cmds.ls("core", "center*", "side_*", 'corner*')
+        if len(cube_list) > 0:
+            cmds.delete("RubikCubeGrp")
+
+    # set inital cube to (0,0) based on width and distance between cubes
+    def set_init_pos(self):
+        cmds.setAttr('rubikCube.translateX', self.init_pos_list[0])
+        cmds.setAttr('rubikCube.translateY', self.init_pos_list[1])
+        cmds.setAttr('rubikCube.translateZ', self.init_pos_list[2])
+
+    # set pivot of all cubes to center of center ('core') cube
+    def set_init_piv():
+        ext_cube_list = cmds.ls('corner*', 'side_*', 'center*', tr=True)
+        for i in range(0, len(ext_cube_list)):
+            cmds.matchTransform(ext_cube_list[i], 'core', piv=True)
+
+    def select_all():
+        cmds.select('core', 'corner*', 'side_*', 'center*')
+
+    # rename cubes to describe position and color
+    def rename_by_color():
+        color_name_list = [
+            "corner_blue_orange_yellow", "side_orange_yellow",
+            "corner_green_orange_yellow", "side_blue_orange",
+            "center_orange", "side_green_orange", "corner_blue_orange_white",
+            "side_orange_white", "corner_green_orange_white",
+            "side_blue_yellow", "center_yellow", "side_green_yellow",
+            "center_blue", "core", "center_green", "side_blue_white",
+            "center_white", "side_green_white","corner_blue_red_yellow",
+            "side_red_yellow", "corner_green_red_yellow", "side_blue_red",
+            "center_red", "side_green_red", "corner_blue_red_white",
+            "side_red_white", "corner_green_red_white"
+        ]
+        cmds.rename("rubikCube", color_name_list[0])
+        for name in range(1, len(color_name_list)):
+            cmds.rename("instance" + str(name), color_name_list[name])
+
+    """ 
+    Color cube with the following convention:
+    Front - Green
+    Back - Blue
+    Top - White
+    Bottom - Yellow
+    Right - Red
+    Left - Orange
+    """
+    def texture():
+        # create rubik shaders if they do not exist
+        shader_group_list = cmds.ls(type='shadingEngine')
+        shader_filter = filter(shader_group_list, 'rubik*')
+        mat_list = cmds.ls(mat=True)
+        mat_filter = filter(mat_list, 'rubik*')
+
+        if len(shader_filter) == 0 and len(mat_filter) == 0:
+            cmds.shadingNode('blinn', asShader=True, name="rubikBlack")
+            cmds.setAttr('rubikBlack.color', 0, 0, 0)
+
+            cmds.shadingNode('blinn', asShader=True, name="rubikBlue")
+            cmds.setAttr('rubikBlue.color', 0, 0, 1)
+
+            cmds.shadingNode('blinn', asShader=True, name="rubikGreen")
+            cmds.setAttr('rubikGreen.color', 0, 1, 0)
             
-        cmds.shadingNode('blinn', asShader=True, name="rubikWhite")
-        cmds.setAttr('rubikWhite.color', 1, 1, 1, type="double3")
+            cmds.shadingNode('blinn', asShader=True, name="rubikOrange")
+            cmds.setAttr('rubikOrange.color', 1, 0.2683, 0.0392)
+            
+            cmds.shadingNode('blinn', asShader=True, name="rubikRed")
+            cmds.setAttr('rubikRed.color', 1, 0, 0)
 
-    # Apply colors
-    cmds.select("core", "corner*", "side_*", "center*")
-    cmds.hyperShade(a='rubikBlack')
+            cmds.shadingNode('blinn', asShader=True, name="rubikYellow")
+            cmds.setAttr('rubikYellow.color', 1, 1, 0)
+                
+            cmds.shadingNode('blinn', asShader=True, name="rubikWhite")
+            cmds.setAttr('rubikWhite.color', 1, 1, 1)
 
-    cmds.select("*blue*" + ".f[122]")
-    cmds.hyperShade(a='rubikBlue')
+        # apply colors
+        Cube.select_all()
+        cmds.hyperShade(a='rubikBlack')
 
-    cmds.select("*green*" + ".f[120]")
-    cmds.hyperShade(a='rubikGreen')
-   
-    cmds.select("*orange*" + ".f[125]")
-    cmds.hyperShade(a='rubikOrange')
+        cmds.select("*blue*" + ".f[122]")
+        cmds.hyperShade(a='rubikBlue')
 
-    cmds.select("*red*" + ".f[124]")
-    cmds.hyperShade(a='rubikRed')
+        cmds.select("*green*" + ".f[120]")
+        cmds.hyperShade(a='rubikGreen')
+    
+        cmds.select("*orange*" + ".f[125]")
+        cmds.hyperShade(a='rubikOrange')
 
-    cmds.select("*yellow*" + ".f[123]")
-    cmds.hyperShade(a='rubikYellow')
+        cmds.select("*red*" + ".f[124]")
+        cmds.hyperShade(a='rubikRed')
 
-    cmds.select("*white*" + ".f[121]")
-    cmds.hyperShade(a='rubikWhite')
+        cmds.select("*yellow*" + ".f[123]")
+        cmds.hyperShade(a='rubikYellow')
+
+        cmds.select("*white*" + ".f[121]")
+        cmds.hyperShade(a='rubikWhite')
+
 
 def set_init_key():
     cmds.select("core", "center*", "side_*", 'corner*')
@@ -105,46 +164,6 @@ def animate():
     cmds.select(clear=True)
     frame = frame + 10
 
-# Create Cube Function
-def create_cube():
-    clear_cube()
-    cube = cmds.polyCube( w=width, h=width, d=width, name="rubikCube" )
-    cmds.polyBevel3(cube, f=0.2, oaf=True, autoFit=True, sg=10, ws=True, sa=30, subdivideNgons=True, mv=True, mvt=0.0001, ma=180, at=180)
-    set_init_pos()
-    transform_name = cube[0]
-
-    def create_pos_instance(x, y, z):
-        result = cmds.instance( transform_name, name="instance#")
-        cmds.move(i * x + init_pos_list[0], j*y + init_pos_list[1], k*z + init_pos_list[2], result)
-
-    # Create cube array
-    for i in range(0, 3):
-        if i != 0:
-            create_pos_instance(transform, 0, 0)
-
-        for j in range(0, 3):             
-            if j != 0:     
-                create_pos_instance(transform, transform, 0)   
-            
-            for k in range(0, 3):
-                if k != 0:
-                    create_pos_instance(transform, transform, transform)
-
-    rename_by_color()
-    texture_cube()
-    set_init_piv()
-    set_init_key()
-    cmds.rotationInterpolation("core", "center*", "side_*", 'corner*', c='quaternionSlerp')
-    # cmds.group("core", "center*", "side_*", 'corner*', name="RubikCubeGrp")
-    cmds.select(cl=True)
-
-def clear_cube():
-    cube_list = cmds.ls("core", "center*", "side_*", 'corner*')
-
-    if len(cube_list) > 0:
-        cmds.delete("RubikCubeGrp")
-        # cmds.delete(cube_list)
-
 def maya_main_window():
     maya_main_window_int = omui.MQtUtil.mainWindow() 
     return wrapInstance(int(maya_main_window_int), QtWidgets.QWidget) 
@@ -157,7 +176,7 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.setWindowTitle('Rubik Cube UI')
         # self.setGeometry(QtCore.QRect(10, 10, 500, 500))
         self.default_ui()
-        self.default_sel()
+        # self.default_sel()
 
     def default_ui(self):
         outer_layout = QtWidgets.QVBoxLayout()
@@ -166,9 +185,9 @@ class RubikCubeUI(QtWidgets.QDialog):
         func_layout = QtWidgets.QHBoxLayout()
 
         button_create = QtWidgets.QPushButton('Create', self)
-        button_create.clicked.connect(create_cube)
+        button_create.clicked.connect(self.create_cube)
         button_reset = QtWidgets.QPushButton('Reset', self)
-        button_reset.clicked.connect(create_cube)
+        button_reset.clicked.connect(self.reset_cube)
         button_random = QtWidgets.QPushButton('Randomize', self)
         # button_random.clicked.connect()
         button_solve = QtWidgets.QPushButton('Solve!', self)
@@ -244,12 +263,20 @@ class RubikCubeUI(QtWidgets.QDialog):
 
         self.setLayout(outer_layout)
     
+    def create_cube(self):
+        cube = Cube()
+        Cube.create(cube)
+
+    def reset_cube(self):
+        Cube.clear()
+        self.create_cube()
+    
     def default_sel(self):
         cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
         for cube in cube_list:
             z = cmds.getAttr(cube + '.translateZ')
-            if z == transform:
-                cmds.select(cube, add=True)
+            # if z == transform:
+            #     cmds.select(cube, add=True)
 
     def combo_onActivated(self):
         return self.combo.currentText()
@@ -269,8 +296,8 @@ class RubikCubeUI(QtWidgets.QDialog):
             for cube in cube_list:
                 print(cube)
                 z = cmds.getAttr(cube+ '.translateZ')
-                if z == transform * -1:
-                    cmds.select(cube, add=True)
+                # if z == transform * -1:
+                #     cmds.select(cube, add=True)
 
     def cw(self):
         combo_result = self.combo_onActivated()
@@ -279,8 +306,8 @@ class RubikCubeUI(QtWidgets.QDialog):
             cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
             for cube in cube_list:
                 z = cmds.getAttr(cube + '.translateZ')
-                if z == transform:
-                    cmds.select(cube, add=True)
+                # if z == transform:
+                #     cmds.select(cube, add=True)
             sel_list = cmds.ls(sl=True)
             center = cmds.ls("center*", sl=True)
             cmds.select(center, d=True) 
@@ -306,7 +333,6 @@ if __name__ == "__main__":
     check_window_exists()
     ui = RubikCubeUI()
     ui.show()
-
 
     
 
