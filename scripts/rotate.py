@@ -256,8 +256,6 @@ def solve():
     cmds.currentTime(last_frame)
     cmds.select(cl=True)
 
-rand_rot()
-
-
+# rand_rot()
 # solve()
 

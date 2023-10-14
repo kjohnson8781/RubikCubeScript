@@ -13,6 +13,7 @@ workspace.mel
 /sourceimages
 /Time Editor
 /scripts/__pycache__
+/scripts/rotate.py
 /scripts/test.py
 /scripts/userSetup.mel
 /scripts/utils.py
