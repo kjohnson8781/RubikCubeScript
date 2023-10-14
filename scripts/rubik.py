@@ -38,6 +38,13 @@ def clear_cube():
     if len(cube_list) > 0:
         cmds.delete('RubikCubeGrp')
 
+def solve():
+    select_all()
+    last_frame = cmds.findKeyframe(which='last')
+    cmds.scaleKey(time=(None,None), nst=last_frame, net=1)
+    cmds.currentTime(last_frame)
+    cmds.select(cl=True)
+
 def check_float_err():
     cube_list = get_cube_list()
     for cube in cube_list:
@@ -195,9 +202,60 @@ class Cube():
         cmds.select('*white*' + '.f[121]')
         cmds.hyperShade(a='rubikWhite')
 
+class CubeSection(Cube):
+    def __init__(self, axis, correct_pos, dir):
+        self.axis = axis
+        self.correct_pos = correct_pos
+        self.dir = dir
+
+    def dir_neg(self, cw=True):
+        if cw == True:
+            return -1
+        else:
+            return 1
+
+    def dir_pos(self, cw=True):
+        if cw == True:
+            return 1
+        else:
+            return 1
+
+    def select(self):
+        cube_list = get_cube_list()
+        for cube in cube_list:
+            coord = cmds.getAttr(cube + '.translate' + self.axis)
+            if coord == self.correct_pos:
+                cmds.select(cube, add=True)
+        return cmds.ls(sl=True)
+
+    def rotate(self, cw=True):
+        # set direction of cw multiplier
+        if self.dir == 'pos':
+            dir = self.dir_pos(cw)
+        elif self.dir == 'neg':
+            dir = self.dir_neg(cw)
+        sel_list = self.select()
+        if self.correct_pos == 0 or self.correct_pos == (cube.transform + (cube.width / 2)):
+            center = get_core_cube()
+        else:
+            center = get_center_sel_cube()
+        cmds.select(center, d=True) 
+        cmds.select(center, add=True) 
+        cmds.parent()
+        cmds.select(center, r=True)
+        if self.axis == 'X':
+            cmds.rotate(dir*90, 0, 0, r=True)
+        elif self.axis == 'Y':
+            cmds.rotate(0, dir*90, 0, r=True)
+        elif self.axis == 'Z':
+            cmds.rotate(0, 0, dir*90, r=True)
+        cmds.parent(sel_list, 'RubikCubeGrp')
+        check_float_err()
+        animate()
+        cmds.select(cl=True)
+
 # override QListWidget to fit content
 class ResizedListWidget(QtWidgets.QListWidget):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -310,7 +368,7 @@ class RubikCubeUI(QtWidgets.QDialog):
         Cube.create(cube)
     
     def default_sel(self):
-        pass
+        front = CubeSection('Z', cube.transform, 'neg')
 
     def list_onSelected(self):
         return self.list_widget.currentItem().text()
