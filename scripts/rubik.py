@@ -6,8 +6,53 @@ import maya.cmds as cmds
 from PySide2 import QtWidgets, QtCore
 from shiboken2 import wrapInstance
 
+# Animation Functions
+def animate():
+    global frame
+    select_all()
+    cmds.setKeyframe(attribute=['rotateX', 'rotateY', 'rotateZ'], t=frame)
+    cmds.select(cl=True)
+    frame = frame + 10
+
+def set_init_key():
+    select_all()
+    cmds.setKeyframe(attribute=['rotateX', 'rotateY', 'rotateZ'], t=[1,11])
+    cmds.select(clear=True)
+
+# Cube Functions
+def get_cube_list():
+    return cmds.ls('core', 'center*', 'side_*', 'corner*', tr=True)
+
+def select_all():
+    cmds.select('core', 'corner*', 'side_*', 'center*')
+
+def get_center_sel_cube():
+    return cmds.ls('center*', sl=True)
+
+def get_core_cube():
+    return cmds.ls('core')
+
+def clear_cube():
+    cube_list = get_cube_list()
+    if len(cube_list) > 0:
+        cmds.delete('RubikCubeGrp')
+
+def check_float_err():
+    cube_list = get_cube_list()
+    for cube in cube_list:
+        x = cmds.getAttr(cube + '.translateX')
+        y = cmds.getAttr(cube + '.translateY')
+        z = cmds.getAttr(cube + '.translateZ')
+        roundX = round(x, 2)
+        roundY = round(y, 2)
+        roundZ = round(z, 2)
+        cmds.setAttr(cube + '.translateX', roundX)
+        cmds.setAttr(cube + '.translateY', roundY)
+        cmds.setAttr(cube + '.translateZ', roundZ)
+
+# Classes
 class Cube():
-    def __init__(self, dist = 0.1, width = 1.0):
+    def __init__(self, dist=0.1, width=1.0):
         self.dist = dist
         self.width = width
         self.transform = width + dist
@@ -16,7 +61,7 @@ class Cube():
     def create(self):
         # create initial cube
         cube = cmds.polyCube(w=self.width, h=self.width, d=self.width, 
-                             name="rubikCube")
+                             name='rubikCube')
         cmds.polyBevel3(cube, f=0.2, oaf=True, autoFit=True, sg=10, ws=True,
                          sa=30, subdivideNgons=True, mv=True, mvt=0.0001,
                          ma=180, at=180)
@@ -26,8 +71,11 @@ class Cube():
 
         # create 3x3 array of instanced cubes
         def create_pos_instance(x, y, z):
-            result = cmds.instance(transform_name, name="instance#")
-            cmds.move(i * x + self.init_pos_list[0], j*y + self.init_pos_list[1], k*z + self.init_pos_list[2], result)
+            result = cmds.instance(transform_name, name='instance#')
+            cmds.move(i * x + self.init_pos_list[0], 
+                      j * y + self.init_pos_list[1],
+                      k * z + self.init_pos_list[2],
+                      result)
         
         for i in range(0, 3):
             if i != 0:
@@ -39,20 +87,19 @@ class Cube():
                 
                 for k in range(0, 3):
                     if k != 0:
-                        create_pos_instance(self.transform, self.transform, self.transform)
+                        create_pos_instance(self.transform, self.transform,
+                                            self.transform)
 
         # remaining initialization functions
         Cube.rename_by_color()
         Cube.set_init_piv()
         Cube.texture()
-        cmds.rotationInterpolation("core", "center*", "side_*", 'corner*', c='quaternionSlerp')
-        cmds.group("core", "center*", "side_*", 'corner*', name="RubikCubeGrp")
+        set_init_key()
+        cmds.rotationInterpolation('core', 'center*', 'side_*', 'corner*',
+                                   c='quaternionSlerp')
+        cmds.group('core', 'center*', 'side_*', 'corner*',
+                   name='RubikCubeGrp')
         cmds.select(cl=True) # deselect all cubes for user
-
-    def clear():
-        cube_list = cmds.ls("core", "center*", "side_*", 'corner*')
-        if len(cube_list) > 0:
-            cmds.delete("RubikCubeGrp")
 
     # set inital cube to (0,0) based on width and distance between cubes
     def set_init_pos(self):
@@ -66,26 +113,23 @@ class Cube():
         for i in range(0, len(ext_cube_list)):
             cmds.matchTransform(ext_cube_list[i], 'core', piv=True)
 
-    def select_all():
-        cmds.select('core', 'corner*', 'side_*', 'center*')
-
     # rename cubes to describe position and color
     def rename_by_color():
         color_name_list = [
-            "corner_blue_orange_yellow", "side_orange_yellow",
-            "corner_green_orange_yellow", "side_blue_orange",
-            "center_orange", "side_green_orange", "corner_blue_orange_white",
-            "side_orange_white", "corner_green_orange_white",
-            "side_blue_yellow", "center_yellow", "side_green_yellow",
-            "center_blue", "core", "center_green", "side_blue_white",
-            "center_white", "side_green_white","corner_blue_red_yellow",
-            "side_red_yellow", "corner_green_red_yellow", "side_blue_red",
-            "center_red", "side_green_red", "corner_blue_red_white",
-            "side_red_white", "corner_green_red_white"
+            'corner_blue_orange_yellow', 'side_orange_yellow',
+            'corner_green_orange_yellow', 'side_blue_orange',
+            'center_orange', 'side_green_orange', 'corner_blue_orange_white',
+            'side_orange_white', 'corner_green_orange_white',
+            'side_blue_yellow', 'center_yellow', 'side_green_yellow',
+            'center_blue', 'core', 'center_green', 'side_blue_white',
+            'center_white', 'side_green_white','corner_blue_red_yellow',
+            'side_red_yellow', 'corner_green_red_yellow', 'side_blue_red',
+            'center_red', 'side_green_red', 'corner_blue_red_white',
+            'side_red_white', 'corner_green_red_white'
         ]
-        cmds.rename("rubikCube", color_name_list[0])
+        cmds.rename('rubikCube', color_name_list[0])
         for name in range(1, len(color_name_list)):
-            cmds.rename("instance" + str(name), color_name_list[name])
+            cmds.rename('instance' + str(name), color_name_list[name])
 
     """ 
     Color cube with the following convention:
@@ -104,112 +148,67 @@ class Cube():
         mat_filter = filter(mat_list, 'rubik*')
 
         if len(shader_filter) == 0 and len(mat_filter) == 0:
-            cmds.shadingNode('blinn', asShader=True, name="rubikBlack")
+            cmds.shadingNode('blinn', asShader=True, name='rubikBlack')
             cmds.setAttr('rubikBlack.color', 0, 0, 0)
 
-            cmds.shadingNode('blinn', asShader=True, name="rubikBlue")
+            cmds.shadingNode('blinn', asShader=True, name='rubikBlue')
             cmds.setAttr('rubikBlue.color', 0, 0, 1)
 
-            cmds.shadingNode('blinn', asShader=True, name="rubikGreen")
+            cmds.shadingNode('blinn', asShader=True, name='rubikGreen')
             cmds.setAttr('rubikGreen.color', 0, 1, 0)
             
-            cmds.shadingNode('blinn', asShader=True, name="rubikOrange")
+            cmds.shadingNode('blinn', asShader=True, name='rubikOrange')
             cmds.setAttr('rubikOrange.color', 1, 0.2683, 0.0392)
             
-            cmds.shadingNode('blinn', asShader=True, name="rubikRed")
+            cmds.shadingNode('blinn', asShader=True, name='rubikRed')
             cmds.setAttr('rubikRed.color', 1, 0, 0)
 
-            cmds.shadingNode('blinn', asShader=True, name="rubikYellow")
+            cmds.shadingNode('blinn', asShader=True, name='rubikYellow')
             cmds.setAttr('rubikYellow.color', 1, 1, 0)
                 
-            cmds.shadingNode('blinn', asShader=True, name="rubikWhite")
+            cmds.shadingNode('blinn', asShader=True, name='rubikWhite')
             cmds.setAttr('rubikWhite.color', 1, 1, 1)
 
         # apply colors
-        Cube.select_all()
+        select_all()
         cmds.hyperShade(a='rubikBlack')
 
-        cmds.select("*blue*" + ".f[122]")
+        cmds.select('*blue*' + '.f[122]')
         cmds.hyperShade(a='rubikBlue')
 
-        cmds.select("*green*" + ".f[120]")
+        cmds.select('*green*' + '.f[120]')
         cmds.hyperShade(a='rubikGreen')
     
-        cmds.select("*orange*" + ".f[125]")
+        cmds.select('*orange*' + '.f[125]')
         cmds.hyperShade(a='rubikOrange')
 
-        cmds.select("*red*" + ".f[124]")
+        cmds.select('*red*' + '.f[124]')
         cmds.hyperShade(a='rubikRed')
 
-        cmds.select("*yellow*" + ".f[123]")
+        cmds.select('*yellow*' + '.f[123]')
         cmds.hyperShade(a='rubikYellow')
 
-        cmds.select("*white*" + ".f[121]")
+        cmds.select('*white*' + '.f[121]')
         cmds.hyperShade(a='rubikWhite')
 
-class CubeSection():
-    def check_float_err():
-        cube_list = Cube.get_cube_list()
-        for cube in cube_list:
-            x = cmds.getAttr(cube + '.translateX')
-            y = cmds.getAttr(cube + '.translateY')
-            z = cmds.getAttr(cube + '.translateZ')
-            roundX = round(x, 2)
-            roundY = round(y, 2)
-            roundZ = round(z, 2)
-            cmds.setAttr(cube + '.translateX', roundX)
-            cmds.setAttr(cube + '.translateY', roundY)
-            cmds.setAttr(cube + '.translateZ', roundZ)
-    
-    # define when clockwise multiplier is positive
-    def dir_pos(cw=True):
-        if cw == True:
-            direction = 1
-        else:
-            direction = -1
+class ResizedListWidget(QtWidgets.QListWidget):
 
-        return direction
-    
-    # define when clockwise multiplier is negative
-    def dir_pos(cw=True):
-        if cw == True:
-            direction = -1
-        else:
-            direction = 1
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setSizeAdjustPolicy(QtWidgets
+                                 .QAbstractScrollArea.AdjustToContents)
 
-        return direction
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(-1, -1)
 
-    def rotate(coord, center, dir, sl):
-        cmds.select(center, d=True) 
-        cmds.select(center, add=True) 
-        cmds.parent()
-        cmds.select(center, r=True)
-        if coord == 'x':
-            cmds.rotate(dir*90, 0, 0, r=True)
-        elif coord == 'y':
-            cmds.rotate(0, dir*90, 0, r=True)
-        elif coord == 'z':
-            cmds.rotate(0, 0, dir*90, r=True)
-        cmds.select(sl)
-        cmds.parent(w=True)
-        CubeSection.check_float_err()
-        cmds.select(cl=True)
-
-def set_init_key():
-    cmds.select("core", "center*", "side_*", 'corner*')
-    cmds.setKeyframe(attribute='rotateX', t=1)
-    cmds.setKeyframe(attribute='rotateY', t=1)
-    cmds.setKeyframe(attribute='rotateZ', t=1)
-    cmds.select(clear=True)
-
-def animate():
-    cmds.currentTime(frame)
-    cmds.select("core", "center*", "side_*", 'corner*')
-    cmds.setKeyframe(attribute='rotateX', t=frame)
-    cmds.setKeyframe(attribute='rotateY', t=frame)
-    cmds.setKeyframe(attribute='rotateZ', t=frame)
-    cmds.select(clear=True)
-    frame = frame + 10
+    def viewportSizeHint(self) -> QtCore.QSize:
+        if self.model().rowCount() == 0:
+            return QtCore.QSize(self.width(), 0)
+        height = sum(self.sizeHintForRow(i) for i in range(self.count())
+                     if not self.item(i).isHidden())
+        width = super().viewportSizeHint().width()
+        return QtCore.QSize(width, height)
 
 def maya_main_window():
     maya_main_window_int = omui.MQtUtil.mainWindow() 
@@ -227,7 +226,7 @@ class RubikCubeUI(QtWidgets.QDialog):
     def default_ui(self):
         outer_layout = QtWidgets.QVBoxLayout()
         
-        func_groupbox = QtWidgets.QGroupBox("Main Functions")
+        func_groupbox = QtWidgets.QGroupBox('Main Functions')
         func_layout = QtWidgets.QHBoxLayout()
 
         button_create = QtWidgets.QPushButton('Create', self)
@@ -246,23 +245,18 @@ class RubikCubeUI(QtWidgets.QDialog):
 
         func_groupbox.setLayout(func_layout)
         
-        manual_groupbox = QtWidgets.QGroupBox("Manual Rotation")
+        manual_groupbox = QtWidgets.QGroupBox('Manual Rotation')
         manual_layout = QtWidgets.QVBoxLayout()
 
         sel_layout = QtWidgets.QHBoxLayout()
-        self.combo = QtWidgets.QComboBox(self)
-        self.combo.addItem( 'Front' )
-        self.combo.addItem( 'Back' )
-        self.combo.addItem( 'Right' )
-        self.combo.addItem( 'Left' )
-        self.combo.addItem( 'Top' )
-        self.combo.addItem( 'Bottom' )
-        self.combo.setCurrentIndex(0)
-        self.combo.move(20, 20)
-        self.combo.activated[str].connect(self.combo_onActivated)
-        self.combo.currentTextChanged[str].connect(self.selection)
+        self.list_widget = ResizedListWidget(self) 
+        self.list_widget.addItems(['Front','Back', 'Right', 'Left', 'Top',
+                                   'Bottom'])
+        self.list_widget.setCurrentRow(0)
+        self.list_widget.itemClicked.connect(self.list_onSelected)
+        self.list_widget.currentItemChanged.connect(self.selection)
 
-        sel_layout.addWidget(self.combo)
+        sel_layout.addWidget(self.list_widget)
 
         radio_layout = QtWidgets.QHBoxLayout()
         self.radio_face = QtWidgets.QRadioButton('Face', self)
@@ -310,63 +304,57 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.setLayout(outer_layout)
     
     def create_cube(self):
-        cube = Cube()
+        clear_cube()
         Cube.create(cube)
 
     def reset_cube(self):
-        Cube.clear()
-        self.create_cube()
+        clear_cube()
+        
     
     def default_sel(self):
-        cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
-        for cube in cube_list:
-            z = cmds.getAttr(cube + '.translateZ')
-            # if z == transform:
-            #     cmds.select(cube, add=True)
+        pass
 
-    def combo_onActivated(self):
-        return self.combo.currentText()
+    def list_onSelected(self):
+        return self.list_widget.currentItem().text()
     
     def radio_checked(self):
-        radioList = [self.radio_face, self.radio_midh, self.radio_midv, self.radio_double]
+        radioList = [self.radio_face, self.radio_midh, self.radio_midv,
+                     self.radio_double]
         for btn in radioList:
             if btn.isChecked():
                 return btn.text()
 
     def selection(self):
-        combo_result = self.combo_onActivated()
+        sel_result = self.list_onSelected()
         radio_result = self.radio_checked()
-        if combo_result == 'Back' and radio_result == 'Face':
-            cmds.select(cl=True)
-            cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
-            for cube in cube_list:
-                print(cube)
-                z = cmds.getAttr(cube+ '.translateZ')
-                # if z == transform * -1:
-                #     cmds.select(cube, add=True)
+        # match (sel_result, radio_result):
+        #     case ('Front', 'Face'):
+                # front =
+                # front.select()
+                # return front
+        #     case ('Back', 'Face'):
+        #     case ('Right', 'Face'):
+        #     case ('Left', 'Face'):
+        #     case ('Top', 'Face'):
+        #     case ('Bottom', 'Face'):
+        #     case ('Front', 'Vertical Middle') | ('Back', 'Vertical Middle'):
+        #     case ('Right', 'Vertical Middle') | ('Left', 'Vertical Middle'):
+        #     case ('*', 'Horizontal Middle'):
+        #     case ('Front', 'Double'):
+        #         front.select()
+        #     case ('Back', 'Double'):
+        #     case ('Right', 'Double'):
+        #     case ('Left', 'Double'):
+        #     case ('Top', 'Double'):
+        #     case ('Bottom', 'Double'):
 
     def cw(self):
-        combo_result = self.combo_onActivated()
-        radio_result = self.radio_checked()
-        if combo_result == 'Front' and radio_result == 'Face':
-            cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
-            for cube in cube_list:
-                z = cmds.getAttr(cube + '.translateZ')
-                # if z == transform:
-                #     cmds.select(cube, add=True)
-            sel_list = cmds.ls(sl=True)
-            center = cmds.ls("center*", sl=True)
-            cmds.select(center, d=True) 
-            cmds.select(center, add=True) 
-            cmds.parent()
-            cmds.select(center, r=True)
-            cmds.rotate(0, 0, -1*90, r=True)
-            cmds.select(sel_list)
-            cmds.parent(w=True)
-            cmds.select(cl=True)
+        # selection().rotate(1)
+        pass
     
     def ccw(self):
-        print('counter')
+        # selection.rotate(0)
+        pass
 
 def check_window_exists():
     if QtWidgets.QApplication.instance():
@@ -376,6 +364,7 @@ def check_window_exists():
 
 
 if __name__ == "__main__":
+    cube = Cube()
     check_window_exists()
     ui = RubikCubeUI()
     ui.show()

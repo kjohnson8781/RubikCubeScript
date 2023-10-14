@@ -6,12 +6,45 @@ import maya.cmds as cmds
 from PySide2 import QtWidgets, QtCore
 from shiboken2 import wrapInstance
 
+# Functions
+def get_cube_list():
+    return cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
+
+def select_all():
+    cmds.select('core', 'corner*', 'side_*', 'center*')
+
+def get_center_sel_cube():
+    return cmds.ls("center*", sl=True)
+
+def get_core_cube():
+    return cmds.ls("core")
+
+def clear_cube():
+    cube_list = get_cube_list()
+    if len(cube_list) > 0:
+        cmds.delete("RubikCubeGrp")
+
+def check_float_err():
+    cube_list = get_cube_list()
+    for cube in cube_list:
+        x = cmds.getAttr(cube + '.translateX')
+        y = cmds.getAttr(cube + '.translateY')
+        z = cmds.getAttr(cube + '.translateZ')
+        roundX = round(x, 2)
+        roundY = round(y, 2)
+        roundZ = round(z, 2)
+        cmds.setAttr(cube + '.translateX', roundX)
+        cmds.setAttr(cube + '.translateY', roundY)
+        cmds.setAttr(cube + '.translateZ', roundZ)
+
+
+# Classes
 class Cube():
-    def __init__(self, dist = 0.1, width = 1.0):
+    def __init__(self, dist=0.1, width=1.0):
         self.dist = dist
         self.width = width
         self.transform = width + dist
-        self.init_pos_list = [-1*self.transform, width/2, -1*self.transform]
+        self.init_pos_list = [-1*self.transform, self.width/2, -1*self.transform]
 
     def create(self):
         # create initial cube
@@ -42,7 +75,8 @@ class Cube():
                 
                 for k in range(0, 3):
                     if k != 0:
-                        create_pos_instance(self.transform, self.transform, self.transform)
+                        create_pos_instance(self.transform, self.transform,
+                                            self.transform)
 
         # remaining initialization functions
         Cube.rename_by_color()
@@ -52,15 +86,6 @@ class Cube():
                                    c='quaternionSlerp')
         cmds.group("core", "center*", "side_*", 'corner*', name="RubikCubeGrp")
         cmds.select(cl=True) # deselect all cubes for user
-
-    def clear(self):
-        cube_list = cmds.ls("core", "center*", "side_*", 'corner*')
-        if len(cube_list) > 0:
-            cmds.delete("RubikCubeGrp")
-
-    def get_cube_list():
-        cube_list = cmds.ls("core", "center*", "side_*", 'corner*', tr=True)
-        return cube_list
 
     # set inital cube to (0,0) based on width and distance between cubes
     def set_init_pos(self):
@@ -73,9 +98,6 @@ class Cube():
         ext_cube_list = cmds.ls('corner*', 'side_*', 'center*', tr=True)
         for i in range(0, len(ext_cube_list)):
             cmds.matchTransform(ext_cube_list[i], 'core', piv=True)
-
-    def select_all():
-        cmds.select('core', 'corner*', 'side_*', 'center*')
 
     # rename cubes to describe position and color
     def rename_by_color():
@@ -134,7 +156,7 @@ class Cube():
             cmds.setAttr('rubikWhite.color', 1, 1, 1)
 
         # apply colors
-        Cube.select_all()
+        select_all()
         cmds.hyperShade(a='rubikBlack')
 
         cmds.select("*blue*" + ".f[122]")
@@ -155,50 +177,107 @@ class Cube():
         cmds.select("*white*" + ".f[121]")
         cmds.hyperShade(a='rubikWhite')
 
-class CubeSection():
-    def check_float_err():
-        cube_list = Cube.get_cube_list()
+class CubeSection(Cube):
+    def __init__(self, axis, correct_pos, dir):
+        self.axis = axis
+        self.correct_pos = correct_pos
+        self.dir = dir
+
+    def dir_neg(self, cw=True):
+        if cw == True:
+            return -1
+        else:
+            return 1
+
+    def dir_pos(self, cw=True):
+        if cw == True:
+            return 1
+        else:
+            return 1
+
+    def select(self):
+        cube_list = get_cube_list()
         for cube in cube_list:
-            x = cmds.getAttr(cube + '.translateX')
-            y = cmds.getAttr(cube + '.translateY')
-            z = cmds.getAttr(cube + '.translateZ')
-            roundX = round(x, 2)
-            roundY = round(y, 2)
-            roundZ = round(z, 2)
-            cmds.setAttr(cube + '.translateX', roundX)
-            cmds.setAttr(cube + '.translateY', roundY)
-            cmds.setAttr(cube + '.translateZ', roundZ)
-    
-    # define when clockwise multiplier is positive
-    def dir_pos(cw=True):
-        if cw == True:
-            direction = 1
+            coord = cmds.getAttr(cube + '.translate' + self.axis)
+            if coord == self.correct_pos:
+                cmds.select(cube, add=True)
+        return cmds.ls(sl=True)
+
+    def rotate(self, cw=True):
+        # set direction of cw multiplier
+        if self.dir == 'pos':
+            dir = self.dir_pos(cw)
+        elif self.dir == 'neg':
+            dir = self.dir_neg(cw)
+        sel_list = self.select()
+        if self.correct_pos == 0 or self.correct_pos == (cube.transform + (cube.width / 2)):
+            center = get_core_cube()
         else:
-            direction = -1
-
-        return direction
-    
-    # define when clockwise multiplier is negative
-    def dir_pos(cw=True):
-        if cw == True:
-            direction = -1
-        else:
-            direction = 1
-
-        return direction
-
-    def rotate(coord, center, dir, sl):
+            center = get_center_sel_cube()
         cmds.select(center, d=True) 
         cmds.select(center, add=True) 
         cmds.parent()
         cmds.select(center, r=True)
-        if coord == 'x':
+        if self.axis == 'X':
             cmds.rotate(dir*90, 0, 0, r=True)
-        elif coord == 'y':
+        elif self.axis == 'Y':
             cmds.rotate(0, dir*90, 0, r=True)
-        elif coord == 'z':
+        elif self.axis == 'Z':
             cmds.rotate(0, 0, dir*90, r=True)
-        cmds.select(sl)
-        cmds.parent(w=True)
-        CubeSection.check_float_err()
+        cmds.parent(sel_list, 'RubikCubeGrp')
+        check_float_err()
+        animate()
         cmds.select(cl=True)
+
+def animate():
+    global frame
+    select_all()
+    cmds.setKeyframe(attribute=['rotateX', 'rotateY', 'rotateZ'], t=frame)
+    cmds.select(cl=True)
+    frame = frame + 10
+
+def rand_rot():
+    for i in range(0,10):
+        print(i)
+        rand_face = randint(0,8)
+        rand_num = randint(0, 1)
+        turn_list = [front.rotate, back.rotate, right.rotate, left.rotate, top.rotate, bottom.rotate, mid_vert_FB.rotate, mid_vert_LR.rotate, mid_hori.rotate]
+        turn_list[rand_face](rand_num)
+
+def solve():
+    cmds.select("core", "center*", "side_*", 'corner*')
+    last_frame = cmds.findKeyframe(which='last')
+    cmds.scaleKey(time=(None,None), nst=last_frame, net=1)
+    cmds.currentTime(last_frame)
+    cmds.select(cl=True)
+
+cube = Cube()
+front = CubeSection('Z', cube.transform, 'neg')
+back = CubeSection('Z', -1*cube.transform, 'pos')
+right = CubeSection('X', cube.transform, 'neg')
+left = CubeSection('X', -1*cube.transform, 'neg')
+top = CubeSection('Y', (cube.transform * 2 + (cube.width / 2)), 'neg')
+bottom = CubeSection('Y', (cube.width/2), 'neg')
+mid_vert_FB = CubeSection('X', 0, 'neg')
+mid_vert_LR = CubeSection('Z', 0, 'neg')
+mid_hori = CubeSection('Y', (cube.transform + (cube.width / 2)), 'neg')
+
+# del frame
+try:
+    frame
+    print(frame)
+except:
+    frame = 21
+
+# solve()
+# rand_rot()
+
+# front.rotate(1)
+# back.rotate(1)
+# right.rotate(1)
+# left.rotate(1)
+# top.rotate(1)
+# bottom.rotate(1)
+# mid_vert_FB.rotate(1)
+# mid_vert_LR.rotate(1)
+# mid_hori.rotate(1)
