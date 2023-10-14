@@ -231,8 +231,10 @@ class CubeSection(Cube):
 
 def animate():
     global frame
+    print(frame)
     select_all()
     cmds.setKeyframe(attribute=['rotateX', 'rotateY', 'rotateZ'], t=frame)
+    cmds.rotationInterpolation(c='quaternionSlerp')
     cmds.select(cl=True)
     frame = frame + 10
 
@@ -263,14 +265,14 @@ mid_vert_LR = CubeSection('Z', 0, 'neg')
 mid_hori = CubeSection('Y', (cube.transform + (cube.width / 2)), 'neg')
 
 # del frame
-try:
-    frame
-    print(frame)
-except:
-    frame = 21
+# try:
+#     frame
+#     print(frame)
+# except:
+#     frame = 21
 
 # solve()
-# rand_rot()
+rand_rot()
 
 # front.rotate(1)
 # back.rotate(1)

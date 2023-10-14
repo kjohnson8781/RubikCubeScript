@@ -11,6 +11,7 @@ def animate():
     global frame
     select_all()
     cmds.setKeyframe(attribute=['rotateX', 'rotateY', 'rotateZ'], t=frame)
+    cmds.rotationInterpolation(c='quaternionSlerp')
     cmds.select(cl=True)
     frame = frame + 10
 
@@ -49,6 +50,11 @@ def check_float_err():
         cmds.setAttr(cube + '.translateX', roundX)
         cmds.setAttr(cube + '.translateY', roundY)
         cmds.setAttr(cube + '.translateZ', roundZ)
+
+# UI Functions
+def maya_main_window():
+    maya_main_window_int = omui.MQtUtil.mainWindow() 
+    return wrapInstance(int(maya_main_window_int), QtWidgets.QWidget) 
 
 # Classes
 class Cube():
@@ -94,11 +100,9 @@ class Cube():
         Cube.rename_by_color()
         Cube.set_init_piv()
         Cube.texture()
-        set_init_key()
-        cmds.rotationInterpolation('core', 'center*', 'side_*', 'corner*',
-                                   c='quaternionSlerp')
         cmds.group('core', 'center*', 'side_*', 'corner*',
                    name='RubikCubeGrp')
+        set_init_key()
         cmds.select(cl=True) # deselect all cubes for user
 
     # set inital cube to (0,0) based on width and distance between cubes
@@ -191,6 +195,7 @@ class Cube():
         cmds.select('*white*' + '.f[121]')
         cmds.hyperShade(a='rubikWhite')
 
+# override QListWidget to fit content
 class ResizedListWidget(QtWidgets.QListWidget):
 
     def __init__(self, *args, **kwargs):
@@ -210,16 +215,13 @@ class ResizedListWidget(QtWidgets.QListWidget):
         width = super().viewportSizeHint().width()
         return QtCore.QSize(width, height)
 
-def maya_main_window():
-    maya_main_window_int = omui.MQtUtil.mainWindow() 
-    return wrapInstance(int(maya_main_window_int), QtWidgets.QWidget) 
-
 class RubikCubeUI(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(RubikCubeUI, self).__init__(parent=maya_main_window())
         self.setWindowFlags(QtCore.Qt.Window)
         self.setObjectName('RubikCubeUI')
         self.setWindowTitle('Rubik Cube UI')
+        self.check_window_exists()
         self.default_ui()
         # self.default_sel()
 
@@ -232,7 +234,7 @@ class RubikCubeUI(QtWidgets.QDialog):
         button_create = QtWidgets.QPushButton('Create', self)
         button_create.clicked.connect(self.create_cube)
         button_reset = QtWidgets.QPushButton('Reset', self)
-        button_reset.clicked.connect(self.reset_cube)
+        button_reset.clicked.connect(self.create_cube)
         button_random = QtWidgets.QPushButton('Randomize', self)
         # button_random.clicked.connect()
         button_solve = QtWidgets.QPushButton('Solve!', self)
@@ -262,22 +264,20 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.radio_face = QtWidgets.QRadioButton('Face', self)
         self.radio_midv = QtWidgets.QRadioButton('Vertical Middle', self)
         self.radio_midh = QtWidgets.QRadioButton('Horizontal Middle', self)
-        self.radio_double = QtWidgets.QRadioButton('Double', self)
-       
+
         self.radio_face.setChecked(True)
         self.radio_face.clicked.connect(self.radio_checked)
         self.radio_midv.clicked.connect(self.radio_checked)
         self.radio_midh.clicked.connect(self.radio_checked)
-        self.radio_double.clicked.connect(self.radio_checked)
         self.radio_face.clicked.connect(self.selection)
         self.radio_midv.clicked.connect(self.selection)
         self.radio_midh.clicked.connect(self.selection)
-        self.radio_double.clicked.connect(self.selection)
 
         radio_layout.addWidget(self.radio_face)
+        radio_layout.addStretch()
         radio_layout.addWidget(self.radio_midv)
+        radio_layout.addStretch()
         radio_layout.addWidget(self.radio_midh)
-        radio_layout.addWidget(self.radio_double)
 
         rotate_layout = QtWidgets.QHBoxLayout()
         button_cw = QtWidgets.QPushButton('Clockwise', self)
@@ -292,7 +292,6 @@ class RubikCubeUI(QtWidgets.QDialog):
         manual_layout.addLayout(rotate_layout)
         manual_groupbox.setLayout(manual_layout)
 
-
         outer_layout.addWidget(func_groupbox)
         outer_layout.addWidget(manual_groupbox)
         outer_layout.addLayout(func_layout)
@@ -305,11 +304,10 @@ class RubikCubeUI(QtWidgets.QDialog):
     
     def create_cube(self):
         clear_cube()
+        global frame
+        frame = 21
+        print(frame)
         Cube.create(cube)
-
-    def reset_cube(self):
-        clear_cube()
-        
     
     def default_sel(self):
         pass
@@ -318,8 +316,7 @@ class RubikCubeUI(QtWidgets.QDialog):
         return self.list_widget.currentItem().text()
     
     def radio_checked(self):
-        radioList = [self.radio_face, self.radio_midh, self.radio_midv,
-                     self.radio_double]
+        radioList = [self.radio_face, self.radio_midh, self.radio_midv]
         for btn in radioList:
             if btn.isChecked():
                 return btn.text()
@@ -340,13 +337,6 @@ class RubikCubeUI(QtWidgets.QDialog):
         #     case ('Front', 'Vertical Middle') | ('Back', 'Vertical Middle'):
         #     case ('Right', 'Vertical Middle') | ('Left', 'Vertical Middle'):
         #     case ('*', 'Horizontal Middle'):
-        #     case ('Front', 'Double'):
-        #         front.select()
-        #     case ('Back', 'Double'):
-        #     case ('Right', 'Double'):
-        #     case ('Left', 'Double'):
-        #     case ('Top', 'Double'):
-        #     case ('Bottom', 'Double'):
 
     def cw(self):
         # selection().rotate(1)
@@ -355,17 +345,20 @@ class RubikCubeUI(QtWidgets.QDialog):
     def ccw(self):
         # selection.rotate(0)
         pass
-
-def check_window_exists():
-    if QtWidgets.QApplication.instance():
-        for window in (QtWidgets.QApplication.allWindows()):
-            if 'RubikCubeUI' in window.objectName():
-                window.destroy()
+    
+    def check_window_exists(self):
+        if QtWidgets.QApplication.instance():
+            for window in (QtWidgets.QApplication.allWindows()):
+                if 'RubikCubeUI' in window.objectName():
+                    window.destroy()
 
 
 if __name__ == "__main__":
+    # Initialize global set up
+    frame = 1
     cube = Cube()
-    check_window_exists()
+
+    # Run UI
     ui = RubikCubeUI()
     ui.show()
 
