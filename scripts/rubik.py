@@ -1,5 +1,5 @@
-from random import randint
 from fnmatch import filter
+from random import randint
 
 import maya.OpenMayaUI as omui
 import maya.cmds as cmds
@@ -21,6 +21,29 @@ def set_init_key():
     cmds.select(clear=True)
 
 # Cube Functions
+def check_float_err():
+    def round_by_90(deg):
+        return round(deg / 90) * 90
+    coord_list = ['X', 'Y', 'Z']
+    cube_list = get_cube_list()
+
+    for cube in cube_list:
+        for coord_str in coord_list:
+            translate = cmds.getAttr(cube + '.translate' + coord_str)
+            round_translate = round(translate, 2)
+            if translate != round_translate:
+                cmds.setAttr(cube + '.translate' + coord_str, round_translate)
+            rot = cmds.getAttr(cube + '.rotate' + coord_str)
+            round_rot = round_by_90(rot)
+            if rot != round_rot:
+                print(cube, rot, round_rot)
+                cmds.setAttr(cube + '.rotate' + coord_str, round_rot)
+
+def clear_cube():
+    cube_list = get_cube_list()
+    if len(cube_list) > 0:
+        cmds.delete('RubikCubeGrp')
+
 def get_cube_list():
     return cmds.ls('core', 'center*', 'side_*', 'corner*', tr=True)
 
@@ -33,30 +56,12 @@ def get_center_sel_cube():
 def get_core_cube():
     return cmds.ls('core')
 
-def clear_cube():
-    cube_list = get_cube_list()
-    if len(cube_list) > 0:
-        cmds.delete('RubikCubeGrp')
-
 def solve():
     select_all()
     last_frame = cmds.findKeyframe(which='last')
     cmds.scaleKey(time=(None,None), nst=last_frame, net=1)
     cmds.currentTime(last_frame)
     cmds.select(cl=True)
-
-def check_float_err():
-    cube_list = get_cube_list()
-    for cube in cube_list:
-        x = cmds.getAttr(cube + '.translateX')
-        y = cmds.getAttr(cube + '.translateY')
-        z = cmds.getAttr(cube + '.translateZ')
-        roundX = round(x, 2)
-        roundY = round(y, 2)
-        roundZ = round(z, 2)
-        cmds.setAttr(cube + '.translateX', roundX)
-        cmds.setAttr(cube + '.translateY', roundY)
-        cmds.setAttr(cube + '.translateZ', roundZ)
 
 # UI Functions
 def maya_main_window():
@@ -124,7 +129,6 @@ class Cube():
         for i in range(0, len(ext_cube_list)):
             cmds.matchTransform(ext_cube_list[i], 'core', piv=True)
 
-    # rename cubes to describe position and color
     def rename_by_color():
         color_name_list = [
             'corner_blue_orange_yellow', 'side_orange_yellow',
@@ -229,18 +233,21 @@ class CubeSection(Cube):
         return cmds.ls(sl=True)
 
     def rotate(self, cw=True):
+        check_float_err()
         # set direction of cw multiplier
         if self.dir == 'pos':
             dir = self.dir_pos(cw)
         elif self.dir == 'neg':
             dir = self.dir_neg(cw)
         sel_list = self.select()
-        if self.correct_pos == 0 or self.correct_pos == (cube.transform + (cube.width / 2)):
+        cmds.delete(ch=True)
+        if (self.correct_pos == 0 or 
+            self.correct_pos == (cube.transform + (cube.width / 2))):
             center = get_core_cube()
         else:
             center = get_center_sel_cube()
         cmds.select(center, d=True) 
-        cmds.select(center, add=True) 
+        cmds.select(center, add=True)
         cmds.parent()
         cmds.select(center, r=True)
         if self.axis == 'X':
@@ -252,7 +259,8 @@ class CubeSection(Cube):
         cmds.parent(sel_list, 'RubikCubeGrp')
         check_float_err()
         animate()
-        cmds.select(cl=True)
+        check_float_err()
+        cmds.select(cl=True)    
 
 # override QListWidget to fit content
 class ResizedListWidget(QtWidgets.QListWidget):
@@ -281,11 +289,19 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.setWindowTitle('Rubik Cube UI')
         self.check_window_exists()
         self.default_ui()
-        # self.default_sel()
+        self.default_sel()
+    
+    # prevent window duplication
+    def check_window_exists(self):
+        if QtWidgets.QApplication.instance():
+            for window in (QtWidgets.QApplication.allWindows()):
+                if 'RubikCubeUI' in window.objectName():
+                    window.destroy()
 
     def default_ui(self):
         outer_layout = QtWidgets.QVBoxLayout()
         
+        # Main Functions Section
         func_groupbox = QtWidgets.QGroupBox('Main Functions')
         func_layout = QtWidgets.QHBoxLayout()
 
@@ -294,9 +310,9 @@ class RubikCubeUI(QtWidgets.QDialog):
         button_reset = QtWidgets.QPushButton('Reset', self)
         button_reset.clicked.connect(self.create_cube)
         button_random = QtWidgets.QPushButton('Randomize', self)
-        # button_random.clicked.connect()
+        button_random.clicked.connect(self.rand_rot)
         button_solve = QtWidgets.QPushButton('Solve!', self)
-        # button_solve.clicked.connect()
+        button_solve.clicked.connect(self.solve)
 
         func_layout.addWidget(button_create)
         func_layout.addWidget(button_reset)
@@ -305,6 +321,7 @@ class RubikCubeUI(QtWidgets.QDialog):
 
         func_groupbox.setLayout(func_layout)
         
+        # Manual Rotations Section
         manual_groupbox = QtWidgets.QGroupBox('Manual Rotation')
         manual_layout = QtWidgets.QVBoxLayout()
 
@@ -315,14 +332,12 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.list_widget.setCurrentRow(0)
         self.list_widget.itemClicked.connect(self.list_onSelected)
         self.list_widget.currentItemChanged.connect(self.selection)
-
         sel_layout.addWidget(self.list_widget)
 
         radio_layout = QtWidgets.QHBoxLayout()
         self.radio_face = QtWidgets.QRadioButton('Face', self)
         self.radio_midv = QtWidgets.QRadioButton('Vertical Middle', self)
         self.radio_midh = QtWidgets.QRadioButton('Horizontal Middle', self)
-
         self.radio_face.setChecked(True)
         self.radio_face.clicked.connect(self.radio_checked)
         self.radio_midv.clicked.connect(self.radio_checked)
@@ -330,7 +345,6 @@ class RubikCubeUI(QtWidgets.QDialog):
         self.radio_face.clicked.connect(self.selection)
         self.radio_midv.clicked.connect(self.selection)
         self.radio_midh.clicked.connect(self.selection)
-
         radio_layout.addWidget(self.radio_face)
         radio_layout.addStretch()
         radio_layout.addWidget(self.radio_midv)
@@ -341,7 +355,9 @@ class RubikCubeUI(QtWidgets.QDialog):
         button_cw = QtWidgets.QPushButton('Clockwise', self)
         button_ccw = QtWidgets.QPushButton('Counter Clockwise', self)
         button_cw.clicked.connect(self.cw)
+        button_cw.clicked.connect(self.selection)
         button_ccw.clicked.connect(self.ccw)
+        button_ccw.clicked.connect(self.selection)
         rotate_layout.addWidget(button_cw)
         rotate_layout.addWidget(button_ccw)
 
@@ -350,27 +366,35 @@ class RubikCubeUI(QtWidgets.QDialog):
         manual_layout.addLayout(rotate_layout)
         manual_groupbox.setLayout(manual_layout)
 
+        # Add sections to main layout
         outer_layout.addWidget(func_groupbox)
         outer_layout.addWidget(manual_groupbox)
         outer_layout.addLayout(func_layout)
         outer_layout.addLayout(sel_layout)
         outer_layout.addLayout(radio_layout)
         outer_layout.addLayout(rotate_layout)
-
-
         self.setLayout(outer_layout)
     
+    def default_sel(self):
+        front = CubeSection('Z', cube.transform, 'neg')
+        front.select()
+
+    def cw(self):
+        self.selection().rotate(1)
+    
+    def ccw(self):
+        self.selection().rotate(0)
+        
     def create_cube(self):
         clear_cube()
         global frame
         frame = 21
-        print(frame)
         Cube.create(cube)
-    
-    def default_sel(self):
-        front = CubeSection('Z', cube.transform, 'neg')
 
     def list_onSelected(self):
+        self.radio_midv.setCheckable(True)
+        if self.list_widget.currentItem().text() in ('Top', 'Bottom'):
+            self.radio_midv.setCheckable(False)
         return self.list_widget.currentItem().text()
     
     def radio_checked(self):
@@ -379,46 +403,83 @@ class RubikCubeUI(QtWidgets.QDialog):
             if btn.isChecked():
                 return btn.text()
 
+    def rand_rot(self):
+        # Initialize all rotations
+        front = CubeSection('Z', cube.transform, 'neg')
+        back = CubeSection('Z', -1*cube.transform, 'pos')
+        right = CubeSection('X', cube.transform, 'neg')
+        left = CubeSection('X', -1*cube.transform, 'neg')
+        top = CubeSection('Y', (cube.transform * 2 + (cube.width / 2)), 'neg')
+        bottom = CubeSection('Y', (cube.width/2), 'neg')
+        mid_vert_FB = CubeSection('X', 0, 'neg')
+        mid_vert_LR = CubeSection('Z', 0, 'neg')
+        mid_hori = CubeSection('Y', (cube.transform + (cube.width / 2)),
+                               'neg')
+
+        for i in range(0,10):
+            print(i)
+            rand_face = randint(0,8)
+            rand_num = randint(0, 1)
+            turn_list = [front.rotate, back.rotate, right.rotate, left.rotate,
+                         top.rotate, bottom.rotate, mid_vert_FB.rotate,
+                         mid_vert_LR.rotate, mid_hori.rotate]
+            turn_list[rand_face](rand_num)
+
     def selection(self):
+        cmds.select(cl=True)
         sel_result = self.list_onSelected()
         radio_result = self.radio_checked()
-        # match (sel_result, radio_result):
-        #     case ('Front', 'Face'):
-                # front =
-                # front.select()
-                # return front
-        #     case ('Back', 'Face'):
-        #     case ('Right', 'Face'):
-        #     case ('Left', 'Face'):
-        #     case ('Top', 'Face'):
-        #     case ('Bottom', 'Face'):
-        #     case ('Front', 'Vertical Middle') | ('Back', 'Vertical Middle'):
-        #     case ('Right', 'Vertical Middle') | ('Left', 'Vertical Middle'):
-        #     case ('*', 'Horizontal Middle'):
-
-    def cw(self):
-        # selection().rotate(1)
-        pass
+        if sel_result == 'Front' and radio_result == 'Face':
+            front = CubeSection('Z', cube.transform, 'neg')
+            front.select()
+            return front
+        elif sel_result == 'Back' and radio_result == 'Face':
+            back = CubeSection('Z', -1*cube.transform, 'pos')
+            back.select()
+            return back
+        elif sel_result == 'Right' and radio_result == 'Face':
+            right = CubeSection('X', cube.transform, 'neg')
+            right.select()
+            return right
+        elif sel_result == 'Left' and radio_result == 'Face':
+            left = CubeSection('X', -1*cube.transform, 'neg')
+            left.select()
+            return left
+        elif sel_result == 'Top' and radio_result == 'Face':
+            top = CubeSection('Y', (cube.transform * 2 + (cube.width / 2)),
+                              'neg')
+            top.select()
+            return top
+        elif sel_result == 'Bottom' and radio_result == 'Face':
+            bottom = CubeSection('Y', (cube.width/2), 'neg')
+            bottom.select()
+            return bottom
+        elif ((sel_result == 'Front' or sel_result == 'Back') and
+               radio_result == 'Vertical Middle'):
+            mid_vert_FB = CubeSection('X', 0, 'neg')
+            mid_vert_FB.select()
+            return mid_vert_FB
+        elif ((sel_result == 'Right' or sel_result == 'Left') and
+               radio_result == 'Vertical Middle'):
+            mid_vert_LR = CubeSection('Z', 0, 'neg')
+            mid_vert_LR.select()
+            return mid_vert_LR
+        elif radio_result == 'Horizontal Middle':
+            mid_hori = CubeSection('Y', (cube.transform + (cube.width / 2)),
+                                   'neg')
+            mid_hori.select()
+            return mid_hori
     
-    def ccw(self):
-        # selection.rotate(0)
-        pass
-    
-    def check_window_exists(self):
-        if QtWidgets.QApplication.instance():
-            for window in (QtWidgets.QApplication.allWindows()):
-                if 'RubikCubeUI' in window.objectName():
-                    window.destroy()
+    def solve(self):
+        solve()
 
+# Initialize global set up
+frame = 1
+cube = Cube()
 
-if __name__ == "__main__":
-    # Initialize global set up
-    frame = 1
-    cube = Cube()
-
-    # Run UI
-    ui = RubikCubeUI()
-    ui.show()
+# Run UI
+ui = RubikCubeUI()
+ui.show()
 
     
 
