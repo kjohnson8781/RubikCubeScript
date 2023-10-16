@@ -23,7 +23,7 @@ To utilize the script with Maya, save rubik.py to your "scripts" folder in your 
 The rubikCube.mb file is a pre-generated scene with the modeled cube. The script is already loaded into a custom shelf. Simply download and open to scene in Maya. 
 
 Scene Viewport
-![Scene Viewport](/img/preview.png "Employee Data title")
+![Scene Viewport](img/preview.png "rubikCube.mb scene ciewport")
 Scene Custom Shelf
 
 ## Features
