@@ -50,22 +50,21 @@ Face refers to each of the outside sides of the cube whereas section refers to w
 
 The script will highlight which section you have selected based on the combination of both inputs. (Top and Bottom sides cannot be combined with Vertical Middle)
 
-Ex) Top Face\
+Ex) Top Face
 
-<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/frontvert.png" width=75% height=50%>
+<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/topface.png" width=75% height=50%>
 
 Ex) Front/Back Vertical Middle 
 
-![front vert](img/frontvert.png)
-
+<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/frontvert.png" width=75% height=50%>
 
 Ex) Right/Left Vertical Middle 
 
-![right vert](img/rightvert.png)
+<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/rightvert.png" width=75% height=50%>
 
 Ex) Horizontal Middle 
 
-![horizontal](img/horizontal.png)
+<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/horizontal.png" width=75% height=50%>
 
 
 After selecting your desired face, press the Clockwise or Counter Clockwise buttons to rotate your section.
