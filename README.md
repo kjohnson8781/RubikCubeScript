@@ -1,14 +1,16 @@
 # Rubik Cube Script for Maya
 
-The Rubik Cube python script allows a user to model and manipulate a Rubik's cube in any Maya scene. 
+The Rubik Cube script allows a user to model and manipulate a Rubik's cube in any Maya scene. 
 
 Features include:
-* Create a fully-textured Rubik Cube
+* Create a fully textured Rubik Cube
 * Manually rotate any face
 * Randomize the cube
 * Solve the cube
 
 All rotations are recorded as an animation which can be watched as a playback video or rendered.
+
+The script was written in Python3 and tested in Maya 2023.
 
 ## Installation
 
@@ -21,7 +23,7 @@ To utilize the script with Maya, save rubik.py to your "scripts" folder in your 
 The rubikCube.mb file is a pre-generated scene with the modeled cube. The script is already loaded into a custom shelf. Simply download and open to scene in Maya. 
 
 Scene Viewport
-
+![Scene Viewport](/img/preview.png "Employee Data title")
 Scene Custom Shelf
 
 ## Features
