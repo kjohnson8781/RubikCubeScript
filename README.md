@@ -50,8 +50,9 @@ Face refers to each of the outside sides of the cube whereas section refers to w
 
 The script will highlight which section you have selected based on the combination of both inputs. (Top and Bottom sides cannot be combined with Vertical Middle)
 
-Ex) Top Face
-<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/frontvert.png" width=50% height=50%>
+Ex) Top Face\
+
+<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/frontvert.png" width=75% height=50%>
 
 Ex) Front/Back Vertical Middle 
 
