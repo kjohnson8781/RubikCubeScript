@@ -9,8 +9,8 @@ Features include:
 * Solve the cube
 
 All rotations are recorded as an animation which can be watched as a playback video or rendered.
-
-![video](https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/rubikCubesolve.mp4)
+[<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/rubikCubesolve.mp4" width="600" height="300"
+/>](https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/rubikCubesolve.mp4)
 
 ## Installation
 
