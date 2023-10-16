@@ -70,17 +70,16 @@ Ex) Horizontal Middle
 After selecting your desired face, press the Clockwise or Counter Clockwise buttons to rotate your section.
 
 ### Randomize
-The script will randomize the cube faces for you by selecting 10 random rotations.
+The script will randomize the cube faces for you by performing 10 random rotations.
 
 ### Solve
 After rotations have been applied, the script will solve your cube and save the rotations as a new animation video.
-
 
 ### Reset
 If needed, the cube can be reset at any time by pressing the reset button. This will return the cube to its base position and rotations as if you had created the cube for the first time.
 
 ### Animations
-All rotations are keyframed at 10 frames apart. Use the animation features in Maya to playback the video within the viewport or use the Playblast tool to see a temporary video. The animations can then be rendered for better quality. 
+All rotations are keyframed at 10 frames apart. Use the animation features in Maya to playback the video within the viewport or use the Playblast tool to see a temporary video. The animations can then be rendered. 
 
 ## License
 
