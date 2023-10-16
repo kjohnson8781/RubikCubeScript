@@ -72,7 +72,9 @@ Ex) Horizontal Middle
 After selecting your desired face, press the Clockwise or Counter Clockwise buttons to rotate your section.
 
 ### Randomize
-The script will randomize the cube faces for you by performing 10 random rotations.
+The script will randomize the cube faces for you by performing 10 random rotations. 
+
+Known issue: the cube will sometimes deform due to Maya inherit transforms not working correctly. Try resetting the cube and randomizing again. If the deform happens several times in a row, try reopening the scene. 
 
 ### Solve
 After rotations have been applied, the script will solve your cube and save the rotations as a new animation video.
