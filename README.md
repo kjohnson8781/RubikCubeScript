@@ -10,7 +10,7 @@ Features include:
 
 All rotations are recorded as an animation which can be watched as a playback video or rendered.
 
-![solve gif](img/rubikCubesolve.mp4)
+![video](https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/rubikCubesolve.mp4)
 
 ## Installation
 
