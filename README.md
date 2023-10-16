@@ -30,6 +30,8 @@ Scene Custom Shelf
 
 ![custom shelf](img/customShelf.png)
 
+The script was written in Python3 for Maya 2022/2023.
+
 ## Features
 ### Basic UI
 ![ui](img/ui.png)
