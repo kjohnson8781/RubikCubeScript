@@ -10,7 +10,7 @@ Features include:
 
 All rotations are recorded as an animation which can be watched as a playback video or rendered.
 
-![solve gif](img/rubikSolvegif.gif)
+![solve gif](img/rubikCubesolve.mp4)
 
 ## Installation
 
@@ -51,8 +51,7 @@ Face refers to each of the outside sides of the cube whereas section refers to w
 The script will highlight which section you have selected based on the combination of both inputs. (Top and Bottom sides cannot be combined with Vertical Middle)
 
 Ex) Top Face
-
-![top face](img/topface.png)
+<img src="https://github.com/kjohnson8781/RubikCubeScript/blob/main/img/frontvert.png" width=50% height=50%>
 
 Ex) Front/Back Vertical Middle 
 
