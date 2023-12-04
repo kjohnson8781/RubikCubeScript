@@ -296,7 +296,7 @@ class RubikCubeUI(QtWidgets.QDialog):
         if QtWidgets.QApplication.instance():
             for window in (QtWidgets.QApplication.allWindows()):
                 if 'RubikCubeUI' in window.objectName():
-                    window.destroy()
+                    window.close()
 
     def default_ui(self):
         outer_layout = QtWidgets.QVBoxLayout()
